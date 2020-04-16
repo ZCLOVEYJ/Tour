@@ -32,7 +32,7 @@ public class SplashActivity extends MyActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aLong -> {
 
-                    startActivity(new Intent(this, MainActivity.class));
+                    startActivity(new Intent(this, LoginActivity.class));
                     finish();
 
                 });
