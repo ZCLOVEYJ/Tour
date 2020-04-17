@@ -12,6 +12,7 @@ import com.max.tour.bean.UserBean;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
 import com.max.tour.http.model.HttpData;
+import com.max.tour.utils.SpUtils;
 import com.max.tour.utils.StringUtils;
 
 import org.litepal.tablemanager.Connector;
@@ -146,6 +147,9 @@ public class RegisterNextActivity extends MyActivity {
         Constant.mUserIcon = bean.getUserIcon();
         Constant.mInfo = bean.getInfo();
         Constant.mIsAdmin = false;
+
+        // 保存用户信息
+        SpUtils.savaUserInfo();
 
 
         Intent intent = new Intent(RegisterNextActivity.this, MainActivity.class);

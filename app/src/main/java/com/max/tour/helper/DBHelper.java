@@ -4,6 +4,8 @@ import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.blankj.utilcode.util.ToastUtils;
 import com.max.tour.bean.AdministratorBean;
+import com.max.tour.bean.RateBean;
+import com.max.tour.bean.RemarkBean;
 import com.max.tour.bean.SightsBean;
 import com.max.tour.bean.UserBean;
 import com.max.tour.utils.StringUtils;
@@ -158,11 +160,21 @@ public class DBHelper {
             bean.setResortId(item.getPoiId());
             bean.setLatitude(latLonPoint.getLatitude());
             bean.setLongitude(latLonPoint.getLongitude());
-            bean.setResortName(item.getAdName());
+            bean.setResortName(item.getTitle());
             bean.setResortGrade("3");
             bean.setResortTime("早8:00--晚6:00");
             bean.setResortPrice(120);
-            bean.setResortContent("高德地图上没有这个信息，出文档的人脑抽了");
+            bean.setResortAddress(item.getSnippet());
+
+            List<RemarkBean> list = new ArrayList<>();
+            for (int i=0;i<3;i++){
+                RemarkBean a = new RemarkBean();
+                a.setContent("你好");
+                a.setReply("我不好");
+                list.add(a);
+            }
+            bean.setRemarkList(list);
+
             List<String> pic = new ArrayList<>();
             for (int i = 0; i < item.getPhotos().size(); i++) {
                 pic.add(item.getPhotos().get(i).getUrl());
@@ -179,4 +191,39 @@ public class DBHelper {
 
         return LitePal.findAll(SightsBean.class);
     }
+
+    public static SightsBean findSightByLatLon(PoiItem item) {
+
+        SightsBean bean = null;
+        LatLonPoint latLonPoint = item.getLatLonPoint();
+
+        List<SightsBean> sights = LitePal.findAll(SightsBean.class);
+        for (SightsBean sight : sights) {
+            if (latLonPoint.getLatitude() == sight.getLatitude() && latLonPoint.getLongitude() == sight.getLongitude()) {
+                //判断经纬度
+                bean = sight;
+
+            }
+        }
+        return bean;
+    }
+
+    /**
+     * 根据景区id查询评分
+     *
+     * @param id
+     * @return
+     */
+    public static float queryRating(int id) {
+        float rateCount = 0f;
+        List<RateBean> rates = LitePal.findAll(RateBean.class, id);
+        for (RateBean rate : rates) {
+            rateCount += rate.getScore();
+        }
+        if (rates.size() == 0) {
+            return 0f;
+        }
+        return rateCount / rates.size();
+    }
+
 }

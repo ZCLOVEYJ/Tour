@@ -20,6 +20,7 @@ import com.max.tour.constants.Constant;
 import com.max.tour.helper.DBHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
+import com.max.tour.utils.SpUtils;
 import com.max.tour.utils.StringUtils;
 
 import butterknife.BindView;
@@ -178,6 +179,9 @@ public class LoginActivity extends MyActivity {
         Constant.mUserIcon = bean.getUserIcon();
         Constant.mInfo = bean.getInfo();
         Constant.mIsAdmin = false;
+
+        // 保存用户信息
+        SpUtils.savaUserInfo();
 
 
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);

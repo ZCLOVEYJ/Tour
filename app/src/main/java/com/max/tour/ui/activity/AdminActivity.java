@@ -14,6 +14,7 @@ import com.max.tour.constants.Constant;
 import com.max.tour.helper.DBHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
+import com.max.tour.utils.SpUtils;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -124,6 +125,9 @@ public class AdminActivity extends MyActivity {
         Constant.mIsAdmin = true;
         Constant.mAdminName = data.getAdminname();
         Constant.mAdminId = data.getId();
+
+        // 保存用户信息
+        SpUtils.savaUserInfo();
 
         startActivity(new Intent(this, MainActivity.class));
         finishAffinity();

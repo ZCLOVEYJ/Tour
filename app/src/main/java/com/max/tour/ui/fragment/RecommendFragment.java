@@ -1,17 +1,21 @@
 package com.max.tour.ui.fragment;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.blankj.utilcode.util.ToastUtils;
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.max.tour.R;
 import com.max.tour.bean.SightsBean;
 import com.max.tour.common.MyFragment;
 import com.max.tour.helper.DBHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.activity.MainActivity;
+import com.max.tour.ui.activity.RecommendDetailsActivity;
 import com.max.tour.ui.adapter.RecommendAdapter;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -40,7 +44,7 @@ import io.reactivex.schedulers.Schedulers;
  * <p>
  * Ver 2.2, 2020-04-14, ZhengChen, Create file
  */
-public class RecommendFragment extends MyFragment<MainActivity> {
+public class RecommendFragment extends MyFragment<MainActivity> implements BaseQuickAdapter.OnItemClickListener {
 
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -76,6 +80,7 @@ public class RecommendFragment extends MyFragment<MainActivity> {
         mRecyclerView.setAdapter(mAdapter);
 
         mAdapter.setEmptyView(mEmptyView);
+        mAdapter.setOnItemClickListener(this);
 
         mRefreshLayout.setEnableLoadMore(false);
         mRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
@@ -155,4 +160,14 @@ public class RecommendFragment extends MyFragment<MainActivity> {
         return !super.isStatusBarEnabled();
     }
 
+
+    @Override
+    public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+        Intent intent = new Intent(getActivity(), RecommendDetailsActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("sight", mList.get(position));
+        intent.putExtra("value", bundle);
+
+        getActivity().startActivity(intent);
+    }
 }

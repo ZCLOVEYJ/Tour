@@ -39,7 +39,7 @@ public class RecommendAdapter extends BaseQuickAdapter<SightsBean, BaseViewHolde
         helper.setText(R.id.tv_title, item.getResortName());
         Glide.with(mContext)
                 .load((item.getPictures() != null && item.getPictures().size() > 0) ? item.getPictures().get(0) : "")
-                .placeholder(R.mipmap.tab_ico_found)
+                .placeholder(R.mipmap.bg_default_photo)
                 .into((ImageView) helper.getView(R.id.iv_pic));
     }
 }

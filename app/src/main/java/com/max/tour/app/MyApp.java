@@ -59,11 +59,8 @@ public class MyApp extends LitePalApplication {
                 // 启用配置
                 .into();
 
-        try {
-            Class.forName("com.max.tour.bean.UserBean");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        // 初始化表
+        LitePal.getDatabase();
         // 调试工具集成
         Stetho.initializeWithDefaults(this);
         // 初始化一个Admin

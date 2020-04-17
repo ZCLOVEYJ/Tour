@@ -2,7 +2,7 @@
 <litepal>
 
     <dbname value="tour" />
-    <version value="4" />
+    <version value="6" />
 
     <list>
         <mapping class="com.max.tour.bean.UserBean"></mapping>

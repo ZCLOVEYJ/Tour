@@ -2,11 +2,13 @@ package com.max.tour.ui.fragment;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -17,7 +19,9 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.CameraPosition;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
@@ -37,7 +41,9 @@ import com.amap.api.services.poisearch.PoiSearch;
 import com.blankj.utilcode.util.LogUtils;
 import com.bumptech.glide.Glide;
 import com.max.tour.R;
+import com.max.tour.bean.SightsBean;
 import com.max.tour.helper.DBHelper;
+import com.max.tour.ui.activity.RecommendDetailsActivity;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import java.util.ArrayList;
@@ -55,7 +61,8 @@ import java.util.List;
  * Ver 2.2, 2020-04-14, ZhengChen, Create file
  */
 public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListener, AMapLocationListener, AMap.OnMarkerClickListener,
-        DistrictSearch.OnDistrictSearchListener, GeocodeSearch.OnGeocodeSearchListener, AMap.OnMapClickListener {
+        DistrictSearch.OnDistrictSearchListener, GeocodeSearch.OnGeocodeSearchListener,
+        AMap.OnMapClickListener, AMap.OnInfoWindowClickListener, AMap.OnCameraChangeListener, AMap.OnMapTouchListener {
 
 
     private View mView;
@@ -139,17 +146,14 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             mLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_FOLLOW);
             //设置定位蓝点的Style
             aMap.setMyLocationStyle(mLocationStyle);
-            //aMap.getUiSettings().setMyLocationButtonEnabled(true);设置默认定位按钮是否显示，非必需设置。
+            //设置默认定位按钮是否显示，非必需设置。
+            aMap.getUiSettings().setMyLocationButtonEnabled(true);
             aMap.setMyLocationEnabled(true);
 
             aMap.setOnMapClickListener(this);
-            aMap.setOnInfoWindowClickListener(new AMap.OnInfoWindowClickListener() {
-                @Override
-                public void onInfoWindowClick(Marker marker) {
-                    LogUtils.i(marker.toString());
-                    // TODO 跳转到详情页
-                }
-            });
+            aMap.setOnInfoWindowClickListener(this);
+            aMap.setOnMarkerClickListener(this);
+            aMap.setOnCameraChangeListener(this);
 
             //声明AMapLocationClient类对象
             mLocationClient = new AMapLocationClient(getActivity());
@@ -226,7 +230,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                     return null;
                 }
             });
-            aMap.setOnMarkerClickListener(this);
+
         }
 
     }
@@ -255,6 +259,10 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         LogUtils.i("-------onLocationChanged-------", aMapLocation.getCityCode());
+        // 设置地图比例
+
+        LatLng latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());//构造一个位置
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
         //初始化位置信息的所有景点信息
         initLocationPlace(aMapLocation.getCityCode());
     }
@@ -354,7 +362,53 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
         for (int i = 0; i < aMap.getMapScreenMarkers().size(); i++) {
             if (aMap.getMapScreenMarkers().get(i).isInfoWindowShown()) {
                 aMap.getMapScreenMarkers().get(i).hideInfoWindow();
+                mPosition = -1;
             }
         }
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+
+        for (int i = 0; i < mList.size(); i++) {
+            if (marker.getTitle().equals(mList.get(i).getTitle())) {
+                mPosition = i;
+            }
+        }
+        if (mPosition != -1) {
+
+            SightsBean bean = DBHelper.findSightByLatLon(mList.get(mPosition));
+            if (bean != null) {
+                Intent intent = new Intent(getActivity(), RecommendDetailsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("sight", bean);
+                intent.putExtra("value", bundle);
+                getActivity().startActivity(intent);
+
+                if (marker.isInfoWindowShown()) {
+                    marker.hideInfoWindow();
+                    mPosition = -1;
+                }
+            }
+
+
+        }
+
+
+    }
+
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+        LogUtils.i("-----------onCameraChange------------");
+    }
+
+    @Override
+    public void onCameraChangeFinish(CameraPosition cameraPosition) {
+        LogUtils.i("-----------onCameraChangeFinish------------");
+    }
+
+    @Override
+    public void onTouch(MotionEvent motionEvent) {
+        LogUtils.i("-----------onTouch------------");
     }
 }
