@@ -31,6 +31,9 @@ public class SplashActivity extends MyActivity {
     @Override
     protected void initView() {
         if (SPUtils.getInstance(Constant.USER).getBoolean("isLogin")){
+            SpUtils.initUserInfo();
+
+
             // 停留一秒 跳转登录页面
             Observable.timer(1, TimeUnit.SECONDS)
                     .observeOn(AndroidSchedulers.mainThread())

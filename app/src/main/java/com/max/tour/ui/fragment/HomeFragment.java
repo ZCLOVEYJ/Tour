@@ -41,9 +41,9 @@ import com.amap.api.services.poisearch.PoiSearch;
 import com.blankj.utilcode.util.LogUtils;
 import com.bumptech.glide.Glide;
 import com.max.tour.R;
-import com.max.tour.bean.SightsBean;
-import com.max.tour.helper.DBHelper;
-import com.max.tour.ui.activity.RecommendDetailsActivity;
+import com.max.tour.bean.Sights;
+import com.max.tour.helper.DbHelper;
+import com.max.tour.ui.activity.SightDetailsActivity;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import java.util.ArrayList;
@@ -212,7 +212,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             LatLng latLng = new LatLng(pois.get(i).getLatLonPoint().getLatitude(), pois.get(i).getLatLonPoint().getLongitude());
             String title = pois.get(i).getTitle();
             String url = pois.get(i).getPhotos().size() > 0 ? pois.get(i).getPhotos().get(0).getUrl() : "";
-            LogUtils.i(url);
             aMap.addMarker(new MarkerOptions().position(latLng).title(title).snippet(url));
             aMap.setInfoWindowAdapter(new AMap.InfoWindowAdapter() {
                 @Override
@@ -303,7 +302,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
      * @param item
      */
     private void saveDb(PoiItem item) {
-        DBHelper.findTourByLocation(item);
+        DbHelper.findTourByLocation(item);
 
 
     }
@@ -377,9 +376,9 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
         }
         if (mPosition != -1) {
 
-            SightsBean bean = DBHelper.findSightByLatLon(mList.get(mPosition));
+            Sights bean = DbHelper.findSightByLatLon(mList.get(mPosition));
             if (bean != null) {
-                Intent intent = new Intent(getActivity(), RecommendDetailsActivity.class);
+                Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("sight", bean);
                 intent.putExtra("value", bundle);

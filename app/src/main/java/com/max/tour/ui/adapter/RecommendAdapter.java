@@ -8,7 +8,7 @@ import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.max.tour.R;
-import com.max.tour.bean.SightsBean;
+import com.max.tour.bean.Sights;
 
 import java.util.List;
 
@@ -23,19 +23,19 @@ import java.util.List;
  * <p>
  * Ver 2.2, 2020-04-16, ZhengChen, Create file
  */
-public class RecommendAdapter extends BaseQuickAdapter<SightsBean, BaseViewHolder> {
+public class RecommendAdapter extends BaseQuickAdapter<Sights, BaseViewHolder> {
 
 
     private Context mContext;
 
 
-    public RecommendAdapter(Context context, @Nullable List<SightsBean> data) {
+    public RecommendAdapter(Context context, @Nullable List<Sights> data) {
         super(R.layout.item_recommend, data);
         this.mContext = context;
     }
 
     @Override
-    protected void convert(BaseViewHolder helper, SightsBean item) {
+    protected void convert(BaseViewHolder helper, Sights item) {
         helper.setText(R.id.tv_title, item.getResortName());
         Glide.with(mContext)
                 .load((item.getPictures() != null && item.getPictures().size() > 0) ? item.getPictures().get(0) : "")

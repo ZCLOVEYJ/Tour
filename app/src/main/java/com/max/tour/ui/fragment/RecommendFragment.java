@@ -10,12 +10,12 @@ import android.view.View;
 import com.blankj.utilcode.util.ToastUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.max.tour.R;
-import com.max.tour.bean.SightsBean;
+import com.max.tour.bean.Sights;
 import com.max.tour.common.MyFragment;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.activity.MainActivity;
-import com.max.tour.ui.activity.RecommendDetailsActivity;
+import com.max.tour.ui.activity.SightDetailsActivity;
 import com.max.tour.ui.adapter.RecommendAdapter;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -51,7 +51,7 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
     @BindView(R.id.refreshLayout)
     SmartRefreshLayout mRefreshLayout;
 
-    List<SightsBean> mList;
+    List<Sights> mList;
     GridLayoutManager mLayoutManager;
 
     RecommendAdapter mAdapter;
@@ -100,25 +100,25 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
 
     private void getListData() {
         Observable
-                .create(new ObservableOnSubscribe<HttpData<List<SightsBean>>>() {
+                .create(new ObservableOnSubscribe<HttpData<List<Sights>>>() {
                     @Override
-                    public void subscribe(ObservableEmitter<HttpData<List<SightsBean>>> emitter) throws Exception {
+                    public void subscribe(ObservableEmitter<HttpData<List<Sights>>> emitter) throws Exception {
 
-                        List<SightsBean> list = DBHelper.findRecommend();
+                        List<Sights> list = DbHelper.findRecommend();
                         emitter.onNext(getData(200, "", list));
 
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<HttpData<List<SightsBean>>>() {
+                .subscribe(new Observer<HttpData<List<Sights>>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(HttpData<List<SightsBean>> data) {
+                    public void onNext(HttpData<List<Sights>> data) {
                         if (200 == data.getCode() && data.getData() != null) {
                             mList.addAll(data.getData());
                             // 展示 数据
@@ -146,8 +146,8 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
 
     }
 
-    private HttpData<List<SightsBean>> getData(int code, String msg, List<SightsBean> bean) {
-        HttpData<List<SightsBean>> data = new HttpData<>();
+    private HttpData<List<Sights>> getData(int code, String msg, List<Sights> bean) {
+        HttpData<List<Sights>> data = new HttpData<>();
         data.setCode(code);
         data.setMsg(msg);
         data.setData(bean);
@@ -163,7 +163,7 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
 
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-        Intent intent = new Intent(getActivity(), RecommendDetailsActivity.class);
+        Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
         Bundle bundle = new Bundle();
         bundle.putSerializable("sight", mList.get(position));
         intent.putExtra("value", bundle);

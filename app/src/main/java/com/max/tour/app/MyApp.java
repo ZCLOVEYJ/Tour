@@ -1,19 +1,18 @@
 package com.max.tour.app;
 
+import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.multidex.MultiDex;
 
 import com.facebook.stetho.Stetho;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.config.IRequestServer;
+import com.max.tour.bean.greendao.DaoMaster;
+import com.max.tour.bean.greendao.DaoSession;
 import com.max.tour.helper.ActivityStackManager;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.RequestHandler;
 import com.max.tour.http.server.ReleaseServer;
-
-import org.litepal.LitePal;
-import org.litepal.LitePalApplication;
-import org.litepal.tablemanager.Connector;
 
 import okhttp3.OkHttpClient;
 
@@ -28,11 +27,13 @@ import okhttp3.OkHttpClient;
  * <p>
  * Ver 2.2, 2020-04-13, ZhengChen, Create file
  */
-public class MyApp extends LitePalApplication {
+public class MyApp extends Application {
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        myApplication = this;
         // 主要是添加下面这句代码
         MultiDex.install(this);
 
@@ -59,15 +60,38 @@ public class MyApp extends LitePalApplication {
                 // 启用配置
                 .into();
 
-        // 初始化表
-        LitePal.getDatabase();
         // 调试工具集成
         Stetho.initializeWithDefaults(this);
+
+        // 初始化GreenDao
+        initGreenDao();
+
         // 初始化一个Admin
-        DBHelper.initAdmin();
-
-
+        DbHelper.initAdmin();
 
 
     }
+
+    private void initGreenDao() {
+        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "design.db");
+        SQLiteDatabase db = helper.getWritableDatabase();
+        DaoMaster daoMaster = new DaoMaster(db);
+        daoSession = daoMaster.newSession();
+    }
+
+    private DaoSession daoSession;
+
+    public DaoSession getDaoSession() {
+        return daoSession;
+    }
+
+
+
+    private static MyApp myApplication = null;
+
+    public static MyApp getApplication() {
+        return myApplication;
+    }
+
+
 }

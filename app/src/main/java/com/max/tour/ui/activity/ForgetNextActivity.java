@@ -8,8 +8,9 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.hjq.widget.view.PasswordEditText;
 import com.max.tour.R;
 import com.max.tour.common.MyActivity;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
+import com.max.tour.utils.StringUtils;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -80,10 +81,10 @@ public class ForgetNextActivity extends MyActivity {
                     @Override
                     public void subscribe(ObservableEmitter<HttpData<String>> emitter) throws Exception {
 
-                        if (DBHelper.updateUser(mEmail, password)) {
+                        if (DbHelper.updateUser(mEmail, StringUtils.encode(password))) {
                             emitter.onNext(getData(200, "", ""));
                         } else {
-                            emitter.onNext(getData(1003, "重置密码失败", ""));
+                            emitter.onNext(getData(1003, "", ""));
                         }
 
 
@@ -102,16 +103,16 @@ public class ForgetNextActivity extends MyActivity {
                         if (1003 == stringHttpData.getCode()) {
                             // 用户已存在，
                             ToastUtils.showShort("重置密码失败");
-                        } else if (200 == stringHttpData.getCode()) {
+                        } else {
                             ToastUtils.showShort("重置密码成功，请重新登录");
                         }
-                        startActivity(new Intent(ForgetNextActivity.this,LoginActivity.class));
+                        startActivity(new Intent(ForgetNextActivity.this, LoginActivity.class));
 
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("表不存在,用户更不存在");
+                        ToastUtils.showShort(e.getMessage());
                     }
 
                     @Override

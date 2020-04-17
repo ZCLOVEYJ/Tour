@@ -8,16 +8,15 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.RegexUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.hjq.widget.view.ClearEditText;
 import com.hjq.widget.view.PasswordEditText;
 import com.max.tour.R;
-import com.max.tour.bean.UserBean;
+import com.max.tour.bean.User;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.utils.SpUtils;
@@ -127,27 +126,26 @@ public class LoginActivity extends MyActivity {
      */
     private void startLogin(String email, String password) {
         Observable
-                .create(new ObservableOnSubscribe<HttpData<UserBean>>() {
+                .create(new ObservableOnSubscribe<HttpData<User>>() {
                     @Override
-                    public void subscribe(ObservableEmitter<HttpData<UserBean>> emitter) throws Exception {
+                    public void subscribe(ObservableEmitter<HttpData<User>> emitter) throws Exception {
 
-                        UserBean bean = DBHelper.findUserByEmailPassword(email, password);
+                        User bean = DbHelper.findUserByEmailPassword(email, StringUtils.encode(password));
                         emitter.onNext(getData(200, "", bean));
 
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<HttpData<UserBean>>() {
+                .subscribe(new Observer<HttpData<User>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(HttpData<UserBean> data) {
+                    public void onNext(HttpData<User> data) {
                         if (200 == data.getCode() && data.getData() != null) {
-
                             // 已发送 跳转到 输入验证码页面
                             jump(data.getData());
                         } else {
@@ -157,7 +155,7 @@ public class LoginActivity extends MyActivity {
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("账号密码错误");
+                        ToastUtils.showShort(e.getMessage());
 
                     }
 
@@ -169,7 +167,7 @@ public class LoginActivity extends MyActivity {
 
     }
 
-    private void jump(UserBean bean) {
+    private void jump(User bean) {
         Constant.mUserId = bean.getId();
         Constant.mUserName = bean.getUserName();
         Constant.mName = bean.getName();
@@ -189,8 +187,8 @@ public class LoginActivity extends MyActivity {
         finishAffinity();
     }
 
-    private HttpData<UserBean> getData(int code, String msg, UserBean bean) {
-        HttpData<UserBean> data = new HttpData<>();
+    private HttpData<User> getData(int code, String msg, User bean) {
+        HttpData<User> data = new HttpData<>();
         data.setCode(code);
         data.setMsg(msg);
         data.setData(bean);

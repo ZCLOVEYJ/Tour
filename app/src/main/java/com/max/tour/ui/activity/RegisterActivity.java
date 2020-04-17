@@ -2,7 +2,6 @@ package com.max.tour.ui.activity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.support.v7.widget.AppCompatTextView;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,19 +10,13 @@ import android.widget.TextView;
 import com.blankj.utilcode.util.RegexUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.gyf.immersionbar.ImmersionBar;
-import com.hjq.base.BaseActivity;
 import com.max.tour.R;
-import com.max.tour.bean.UserBean;
 import com.max.tour.common.MyActivity;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.utils.EmailUtil;
 import com.max.tour.utils.StringUtils;
-
-import org.litepal.LitePal;
-
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -123,7 +116,7 @@ public class RegisterActivity extends MyActivity {
                     @Override
                     public void subscribe(ObservableEmitter<HttpData<String>> emitter) throws Exception {
 
-                        if (DBHelper.findUserByEmail(email)) {
+                        if (DbHelper.findUserByEmail(email)) {
                             emitter.onNext(getData(1001, "用户已存在", ""));
                         } else {
                             // 否则发送邮箱验证码
@@ -148,24 +141,20 @@ public class RegisterActivity extends MyActivity {
                             // 已发送 跳转到 输入验证码页面
                             jump(email, password);
 
-
-                        } else if (1001 == stringHttpData.getCode()) {
-                            // 用户已存在，
-                            ToastUtils.showShort("用户已存在，请直接登录");
                         } else {
-
+                            ToastUtils.showShort("用户已存在，请直接登录");
                         }
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("表不存在,用户更不存在");
+                        ToastUtils.showShort(e.getMessage());
 
-                        // 否则发送邮箱验证码
-                        sendEmailCode(email);
-
-                        // 已发送 跳转到 输入验证码页面
-                        jump(email, password);
+//                        // 否则发送邮箱验证码
+//                        sendEmailCode(email);
+//
+//                        // 已发送 跳转到 输入验证码页面
+//                        jump(email, password);
                     }
 
                     @Override
@@ -202,7 +191,6 @@ public class RegisterActivity extends MyActivity {
                 .subscribeOn(Schedulers.io()).subscribe();
 
     }
-
 
 
     private HttpData<String> getData(int code, String msg, String str) {

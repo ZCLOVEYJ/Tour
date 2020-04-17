@@ -15,13 +15,10 @@ import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
 import com.max.tour.R;
-import com.max.tour.bean.RemarkBean;
-import com.max.tour.bean.SightsBean;
-import com.max.tour.bean.UserBean;
+import com.max.tour.bean.Comment;
+import com.max.tour.bean.Sights;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
-import com.max.tour.helper.DBHelper;
-import com.max.tour.helper.DataUtils;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.adapter.RemarkAdapter;
 import com.max.tour.utils.BasicTool;
@@ -46,7 +43,7 @@ import io.reactivex.schedulers.Schedulers;
 /**
  * 景区详情页
  */
-public class RecommendDetailsActivity extends MyActivity {
+public class SightDetailsActivity extends MyActivity {
 
 
     @BindView(R.id.recyclerView)
@@ -65,7 +62,7 @@ public class RecommendDetailsActivity extends MyActivity {
     RelativeLayout mRlLayoutBottom;
 
 
-    List<RemarkBean> mList;
+    List<Comment> mList;
     LinearLayoutManager mLayoutManager;
     RemarkAdapter mAdapter;
 
@@ -80,7 +77,7 @@ public class RecommendDetailsActivity extends MyActivity {
     BGABanner mBanner;
 
 
-    SightsBean mBean;
+    Sights mBean;
     Bundle mBundle;
 
     /**
@@ -93,7 +90,7 @@ public class RecommendDetailsActivity extends MyActivity {
     private String isCommentId = "0";
 
     private int mSightId;
-    private int mUserId;
+    private long mUserId;
 
 
     @Override
@@ -105,7 +102,7 @@ public class RecommendDetailsActivity extends MyActivity {
     protected void initView() {
 
         mBundle = getIntent().getBundleExtra("value");
-        mBean = (SightsBean) mBundle.getSerializable("sight");
+        mBean = (Sights) mBundle.getSerializable("sight");
         if (mBean != null) {
 
             initBundleData();
@@ -119,7 +116,7 @@ public class RecommendDetailsActivity extends MyActivity {
 
 
     private void initBundleData() {
-        mSightId = mBean.getId();
+//        mSightId = mBean.getId();
         mUserId = Constant.mUserId;
 
     }
@@ -145,7 +142,7 @@ public class RecommendDetailsActivity extends MyActivity {
         mBanner.setAdapter(new BGABanner.Adapter<ImageView, String>() {
             @Override
             public void fillBannerItem(BGABanner banner, ImageView itemView, String model, int position) {
-                Glide.with(RecommendDetailsActivity.this)
+                Glide.with(SightDetailsActivity.this)
                         .load(model)
                         .placeholder(R.mipmap.bg_default_photo)
                         .error(R.mipmap.bg_default_photo)
@@ -154,7 +151,7 @@ public class RecommendDetailsActivity extends MyActivity {
                         .into(itemView);
             }
         });
-        mBanner.setData(mBean.getPictures(), mBean.getPictures());
+        //mBanner.setData(mBean.getPictures(), mBean.getPictures());
 
         // name
         mName = mHeaderView.findViewById(R.id.tv_title);
@@ -191,7 +188,7 @@ public class RecommendDetailsActivity extends MyActivity {
 //                    @Override
 //                    public void subscribe(ObservableEmitter<HttpData<Float>> emitter) throws Exception {
 //
-//                        float ratingStr = DBHelper.queryRating(id);
+//                        float ratingStr = DbHelper.queryRating(id);
 //                        HttpData bean = DataUtils.getInstance().getData(200, "", ratingStr);
 //                        emitter.onNext(bean);
 //                    }
@@ -231,24 +228,24 @@ public class RecommendDetailsActivity extends MyActivity {
 
 //    private void queryRemark(int id) {
 //        Observable
-//                .create(new ObservableOnSubscribe<HttpData<List<RemarkBean>>>() {
+//                .create(new ObservableOnSubscribe<HttpData<List<Comment>>>() {
 //                    @Override
-//                    public void subscribe(ObservableEmitter<HttpData<List<RemarkBean>>> emitter) throws Exception {
+//                    public void subscribe(ObservableEmitter<HttpData<List<Comment>>> emitter) throws Exception {
 //
-//                        List<RemarkBean> list = DBHelper.queryRemarkList(id);
+//                        List<Comment> list = DbHelper.queryRemarkList(id);
 //                        emitter.onNext(bean);
 //                    }
 //                })
 //                .observeOn(AndroidSchedulers.mainThread())
 //                .subscribeOn(Schedulers.io())
-//                .subscribe(new Observer<HttpData<List<RemarkBean>>>() {
+//                .subscribe(new Observer<HttpData<List<Comment>>>() {
 //                    @Override
 //                    public void onSubscribe(Disposable d) {
 //
 //                    }
 //
 //                    @Override
-//                    public void onNext(HttpData<List<RemarkBean>> data) {
+//                    public void onNext(HttpData<List<Comment>> data) {
 //                        if (200 == data.getCode() && data.getData() != null) {
 //
 //                        }
@@ -318,6 +315,11 @@ public class RecommendDetailsActivity extends MyActivity {
                     @Override
                     public void subscribe(ObservableEmitter<HttpData<String>> emitter) throws Exception {
 
+
+                        // 提交评论
+//                        DbHelper.saveComment(msg, Constant.mUserId, mSightId);
+
+
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
@@ -334,14 +336,12 @@ public class RecommendDetailsActivity extends MyActivity {
 
                             // 已发送 跳转到 输入验证码页面
 //                            jump(data.getData());
-                        } else {
-                            ToastUtils.showShort("账号密码错误");
                         }
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("账号密码错误");
+                        ToastUtils.showShort("请求错误");
 
                     }
 

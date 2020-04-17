@@ -48,4 +48,19 @@ public class SpUtils {
         SPUtils.getInstance(Constant.USER).put("adminId", "");
         SPUtils.getInstance(Constant.USER).put("isLogin", false);
     }
+
+    public static void initUserInfo() {
+
+        Constant.mUserId = SPUtils.getInstance(Constant.USER).getLong("userId");
+        Constant.mUserName = SPUtils.getInstance(Constant.USER).getString("userName", "");
+        Constant.mName = SPUtils.getInstance(Constant.USER).getString("name", "");
+        Constant.mSex = SPUtils.getInstance(Constant.USER).getString("sex", "");
+        Constant.mDate = SPUtils.getInstance(Constant.USER).getString("date", "");
+        Constant.mEmail = SPUtils.getInstance(Constant.USER).getString("email", "");
+        Constant.mUserIcon = SPUtils.getInstance(Constant.USER).getString("userIcon", "");
+        Constant.mInfo = SPUtils.getInstance(Constant.USER).getString("info", "");
+        Constant.mIsAdmin = SPUtils.getInstance(Constant.USER).getBoolean("isAdmin", false);
+        Constant.mAdminName = SPUtils.getInstance(Constant.USER).getString("adminName", "");
+        Constant.mAdminId = SPUtils.getInstance(Constant.USER).getLong("adminId");
+    }
 }

@@ -1,7 +1,6 @@
 package com.max.tour.ui.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.TextUtils;
@@ -13,14 +12,13 @@ import com.hjq.widget.view.CountdownView;
 import com.hjq.widget.view.RegexEditText;
 import com.max.tour.R;
 import com.max.tour.common.MyActivity;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.utils.EmailUtil;
 import com.max.tour.utils.StringUtils;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -110,7 +108,7 @@ public class ForgetActivity extends MyActivity {
                     @Override
                     public void subscribe(ObservableEmitter<HttpData<String>> emitter) throws Exception {
 
-                        if (!DBHelper.findUserByEmail(email)) {
+                        if (!DbHelper.findUserByEmail(email)) {
                             emitter.onNext(getData(1001, "用户不存在", ""));
                         } else {
                             // 否则发送邮箱验证码
@@ -141,7 +139,7 @@ public class ForgetActivity extends MyActivity {
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("表不存在,用户更不存在");
+                        ToastUtils.showShort(e.getMessage());
                     }
 
                     @Override

@@ -21,7 +21,7 @@ public class Constant {
     /**
      * userId
      */
-    public static int mUserId;
+    public static long mUserId;
     /**
      * 用户名
      */
@@ -61,7 +61,7 @@ public class Constant {
     /**
      * 管理员ID
      */
-    public static int mAdminId;
+    public static long mAdminId;
     /**
      * 管理员创建时间
      */

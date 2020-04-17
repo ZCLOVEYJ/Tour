@@ -8,13 +8,14 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.hjq.widget.view.ClearEditText;
 import com.hjq.widget.view.PasswordEditText;
 import com.max.tour.R;
-import com.max.tour.bean.AdministratorBean;
+import com.max.tour.bean.Admin;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
-import com.max.tour.helper.DBHelper;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.helper.InputTextHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.utils.SpUtils;
+import com.max.tour.utils.StringUtils;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -78,25 +79,25 @@ public class AdminActivity extends MyActivity {
 
     private void startAdminLogin(String name, String password) {
         Observable
-                .create(new ObservableOnSubscribe<HttpData<AdministratorBean>>() {
+                .create(new ObservableOnSubscribe<HttpData<Admin>>() {
                     @Override
-                    public void subscribe(ObservableEmitter<HttpData<AdministratorBean>> emitter) throws Exception {
+                    public void subscribe(ObservableEmitter<HttpData<Admin>> emitter) throws Exception {
 
-                        AdministratorBean bean = DBHelper.findAdminByNamePassword(name, password);
+                        Admin bean = DbHelper.findAdminByNamePassword(name, StringUtils.encode(password));
                         emitter.onNext(getData(200, "", bean));
 
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<HttpData<AdministratorBean>>() {
+                .subscribe(new Observer<HttpData<Admin>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(HttpData<AdministratorBean> data) {
+                    public void onNext(HttpData<Admin> data) {
                         if (200 == data.getCode() && data.getData() != null) {
 
                             // 已发送 跳转到 输入验证码页面
@@ -120,7 +121,7 @@ public class AdminActivity extends MyActivity {
 
     }
 
-    private void jump(AdministratorBean data) {
+    private void jump(Admin data) {
 
         Constant.mIsAdmin = true;
         Constant.mAdminName = data.getAdminname();
@@ -134,8 +135,8 @@ public class AdminActivity extends MyActivity {
 
     }
 
-    private HttpData<AdministratorBean> getData(int code, String msg, AdministratorBean bean) {
-        HttpData<AdministratorBean> data = new HttpData<>();
+    private HttpData<Admin> getData(int code, String msg, Admin bean) {
+        HttpData<Admin> data = new HttpData<>();
         data.setCode(code);
         data.setMsg(msg);
         data.setData(bean);

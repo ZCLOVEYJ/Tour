@@ -1,21 +1,19 @@
 package com.max.tour.ui.activity;
 
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.TextUtils;
 
 import com.blankj.utilcode.util.ToastUtils;
 import com.hjq.widget.view.RegexEditText;
 import com.max.tour.R;
-import com.max.tour.bean.UserBean;
+import com.max.tour.bean.User;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.utils.SpUtils;
 import com.max.tour.utils.StringUtils;
-
-import org.litepal.tablemanager.Connector;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -81,41 +79,26 @@ public class RegisterNextActivity extends MyActivity {
      */
     private void startRegister() {
         Observable
-                .create(new ObservableOnSubscribe<HttpData<UserBean>>() {
+                .create(new ObservableOnSubscribe<HttpData<User>>() {
                     @Override
-                    public void subscribe(ObservableEmitter<HttpData<UserBean>> emitter) throws Exception {
+                    public void subscribe(ObservableEmitter<HttpData<User>> emitter) throws Exception {
 
-                        SQLiteDatabase db = Connector.getDatabase();
+                        User user = DbHelper.insertUser(mEmail, StringUtils.encode(mPassword));
 
-                        UserBean bean = new UserBean();
-                        bean.setUserName("user_" + System.currentTimeMillis());
-                        bean.setEmail(mEmail);
-                        bean.setUserPassword(StringUtils.encode(mPassword));
-                        bean.setName("");
-                        bean.setSex("女");
-                        bean.setBirthday("");
-                        bean.setUserIcon("");
-                        bean.setInfo("");
-                        bean.setAdminLevel("0");
-                        if (bean.save()) {
-                            emitter.onNext(getData(200, "注册成功", bean));
-                        } else {
-                            emitter.onNext(getData(200, "注册失败", null));
-                        }
-
+                        emitter.onNext(getData(200, "", user));
 
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<HttpData<UserBean>>() {
+                .subscribe(new Observer<HttpData<User>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(HttpData<UserBean> bean) {
+                    public void onNext(HttpData<User> bean) {
                         if (200 == bean.getCode() && bean.getData() != null) {
                             jump(bean.getData());
 
@@ -126,7 +109,7 @@ public class RegisterNextActivity extends MyActivity {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        ToastUtils.showShort(e.getMessage());
                     }
 
                     @Override
@@ -137,7 +120,7 @@ public class RegisterNextActivity extends MyActivity {
 
     }
 
-    private void jump(UserBean bean) {
+    private void jump(User bean) {
         Constant.mUserId = bean.getId();
         Constant.mUserName = bean.getUserName();
         Constant.mName = bean.getName();
@@ -157,8 +140,8 @@ public class RegisterNextActivity extends MyActivity {
         finishAffinity();
     }
 
-    private HttpData<UserBean> getData(int code, String msg, UserBean bean) {
-        HttpData<UserBean> data = new HttpData<>();
+    private HttpData<User> getData(int code, String msg, User bean) {
+        HttpData<User> data = new HttpData<>();
         data.setCode(code);
         data.setMsg(msg);
         data.setData(bean);
