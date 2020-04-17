@@ -5,6 +5,7 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Property;
 
+import java.io.Serializable;
 import java.util.Date;
 import org.greenrobot.greendao.annotation.Generated;
 
@@ -12,7 +13,9 @@ import org.greenrobot.greendao.annotation.Generated;
  * 评论
  */
 @Entity
-public class Comment {
+public class Comment implements Serializable {
+
+    public static final long  serialVersionUID = 3L;
 
     @Id(autoincrement = true)
     private Long id;

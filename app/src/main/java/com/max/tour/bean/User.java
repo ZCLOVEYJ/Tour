@@ -6,6 +6,7 @@ import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.ToMany;
 import org.greenrobot.greendao.annotation.Unique;
 
+import java.io.Serializable;
 import java.util.List;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.DaoException;
@@ -20,7 +21,9 @@ import com.max.tour.bean.greendao.UserDao;
  * 用户数据
  */
 @Entity
-public class User {
+public class User implements Serializable {
+
+    public static final long  serialVersionUID = 6L;
 
     @Id(autoincrement = true)
     private Long id;

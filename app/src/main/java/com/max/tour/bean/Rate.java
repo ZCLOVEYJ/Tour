@@ -4,6 +4,7 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Property;
 
+import java.io.Serializable;
 import java.util.Date;
 import org.greenrobot.greendao.annotation.Generated;
 
@@ -19,7 +20,9 @@ import org.greenrobot.greendao.annotation.Generated;
  * Ver 2.2, 2020-04-13, ZhengChen, Create file
  */
 @Entity
-public class Rate {
+public class Rate implements Serializable {
+
+    public static final long  serialVersionUID = 4L;
 
     @Id(autoincrement = true)
     private Long id;

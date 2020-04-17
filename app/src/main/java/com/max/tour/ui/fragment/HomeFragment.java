@@ -289,22 +289,9 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             }
         }
         if (mPosition != -1) {
-//            cavasDis(mList.get(mPosition));
-            saveDb(mList.get(mPosition));
-
+            DbHelper.saveTourByLocation(mList.get(mPosition));
         }
         return true;
-    }
-
-    /**
-     * 保存景点信息到数据库
-     *
-     * @param item
-     */
-    private void saveDb(PoiItem item) {
-        DbHelper.findTourByLocation(item);
-
-
     }
 
 

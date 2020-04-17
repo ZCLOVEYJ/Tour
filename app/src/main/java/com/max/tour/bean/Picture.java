@@ -4,11 +4,15 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
 
+import java.io.Serializable;
+
 /**
  *
  */
 @Entity
-public class Picture {
+public class Picture implements Serializable {
+
+    public static final long  serialVersionUID = 2L;
 
     @Id(autoincrement = true)
     private Long id;

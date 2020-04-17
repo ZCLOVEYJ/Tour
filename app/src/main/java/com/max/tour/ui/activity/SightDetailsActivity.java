@@ -89,8 +89,10 @@ public class SightDetailsActivity extends MyActivity {
      */
     private String isCommentId = "0";
 
-    private int mSightId;
+    private long mSightId;
     private long mUserId;
+
+    List<String> pictures = new ArrayList<>();
 
 
     @Override
@@ -116,8 +118,12 @@ public class SightDetailsActivity extends MyActivity {
 
 
     private void initBundleData() {
-//        mSightId = mBean.getId();
+        mSightId = mBean.getId();
         mUserId = Constant.mUserId;
+
+        for (int i = 0; i < mBean.getPictures().size(); i++) {
+            pictures.add(mBean.getPictures().get(i).getPath());
+        }
 
     }
 
@@ -151,7 +157,7 @@ public class SightDetailsActivity extends MyActivity {
                         .into(itemView);
             }
         });
-        //mBanner.setData(mBean.getPictures(), mBean.getPictures());
+        mBanner.setData(pictures, pictures);
 
         // name
         mName = mHeaderView.findViewById(R.id.tv_title);

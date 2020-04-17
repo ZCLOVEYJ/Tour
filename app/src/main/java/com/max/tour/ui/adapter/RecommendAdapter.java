@@ -38,7 +38,7 @@ public class RecommendAdapter extends BaseQuickAdapter<Sights, BaseViewHolder> {
     protected void convert(BaseViewHolder helper, Sights item) {
         helper.setText(R.id.tv_title, item.getResortName());
         Glide.with(mContext)
-                .load((item.getPictures() != null && item.getPictures().size() > 0) ? item.getPictures().get(0) : "")
+                .load((item.getPictures() != null && item.getPictures().size() > 0) ? item.getPictures().get(0).getPath() : "")
                 .placeholder(R.mipmap.bg_default_photo)
                 .into((ImageView) helper.getView(R.id.iv_pic));
     }

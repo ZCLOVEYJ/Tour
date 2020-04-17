@@ -1,18 +1,22 @@
 package com.max.tour.helper;
 
+import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.blankj.utilcode.util.LogUtils;
 import com.max.tour.app.MyApp;
 import com.max.tour.bean.Admin;
+import com.max.tour.bean.Picture;
 import com.max.tour.bean.Sights;
 import com.max.tour.bean.User;
 import com.max.tour.bean.greendao.AdminDao;
 import com.max.tour.bean.greendao.DaoSession;
+import com.max.tour.bean.greendao.SightsDao;
 import com.max.tour.bean.greendao.UserDao;
 import com.max.tour.utils.StringUtils;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -151,61 +155,70 @@ public class DbHelper {
 
     }
 
-    public static void findTourByLocation(PoiItem item) {
+    public static void saveTourByLocation(PoiItem item) {
 
-//        boolean hasData = false;
-//        LatLonPoint latLonPoint = item.getLatLonPoint();
-//
-//        List<Sights> sights = LitePal.findAll(Sights.class);
-//        for (Sights sight : sights) {
-//            if (latLonPoint.getLatitude() == sight.getLatitude() && latLonPoint.getLongitude() == sight.getLongitude()) {
-//                //判断经纬度
-//                hasData = true;
-//            }
-//        }
-//        if (!hasData) {
-//            //  添加数据到数据库
-//            Sights bean = new Sights();
-//            bean.setResortId(item.getPoiId());
-//            bean.setLatitude(latLonPoint.getLatitude());
-//            bean.setLongitude(latLonPoint.getLongitude());
-//            bean.setResortName(item.getTitle());
-//            bean.setResortGrade("3");
-//            bean.setResortTime("早8:00--晚6:00");
-//            bean.setResortPrice(120);
-//            bean.setResortAddress(item.getSnippet());
-//
-//
-//            List<String> pic = new ArrayList<>();
-//            for (int i = 0; i < item.getPhotos().size(); i++) {
-//                pic.add(item.getPhotos().get(i).getUrl());
-//            }
-//            bean.setPictures(pic);
-//            bean.save();
+        boolean hasData = false;
+        LatLonPoint latLonPoint = item.getLatLonPoint();
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.where(SightsDao.Properties.Latitude.eq(latLonPoint.getLatitude()), SightsDao.Properties.Longitude.eq(latLonPoint.getLongitude()));
+        List<Sights> sights = qb.list();
+        if (sights.size() > 0) {
+            hasData = true;
+        }
+        if (!hasData) {
+            //  添加数据到数据库
+            Sights sight = new Sights();
+            sight.setResortId(item.getPoiId());
+            sight.setLatitude(latLonPoint.getLatitude());
+            sight.setLongitude(latLonPoint.getLongitude());
+            sight.setResortName(item.getTitle());
+            sight.setResortGrade("3");
+            sight.setResortTime("早8:00--晚6:00");
+            sight.setResortPrice(120);
+            sight.setResortAddress(item.getSnippet());
+            daoSession.insert(sight);
 
-//        }
+            for (int i = 0; i < item.getPhotos().size(); i++) {
+                Picture picture = new Picture();
+                picture.setPath(item.getPhotos().get(i).getUrl());
+                picture.setSightId(sight.getId());
+                daoSession.insert(picture);
+            }
+
+        }
 
 
     }
 
+    /**
+     * 查询推荐的景点
+     *
+     * @return 景点列表
+     */
     public static List<Sights> findRecommend() {
 
-        return null;
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+
+        return qb.list();
     }
 
+    /**
+     * 查询单个景点
+     * @param item 位置
+     * @return 景点信息
+     */
     public static Sights findSightByLatLon(PoiItem item) {
 
-//        Sights bean = null;
-//        LatLonPoint latLonPoint = item.getLatLonPoint();
-//
-//        List<Sights> sights = LitePal.findAll(Sights.class);
-//        for (Sights sight : sights) {
-//            if (latLonPoint.getLatitude() == sight.getLatitude() && latLonPoint.getLongitude() == sight.getLongitude()) {
-//                //判断经纬度
-//                bean = sight;
-//
-//            }
-//        }
+        LatLonPoint latLonPoint = item.getLatLonPoint();
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.where(SightsDao.Properties.Latitude.eq(latLonPoint.getLatitude()), SightsDao.Properties.Longitude.eq(latLonPoint.getLongitude()));
+        List<Sights> sights = qb.list();
+        if (sights.size() > 0) {
+            return sights.get(0);
+        }
         return null;
     }
 
