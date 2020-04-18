@@ -5,13 +5,18 @@ import com.amap.api.services.core.PoiItem;
 import com.blankj.utilcode.util.LogUtils;
 import com.max.tour.app.MyApp;
 import com.max.tour.bean.Admin;
+import com.max.tour.bean.Comment;
 import com.max.tour.bean.Picture;
+import com.max.tour.bean.Rate;
 import com.max.tour.bean.Sights;
 import com.max.tour.bean.User;
 import com.max.tour.bean.greendao.AdminDao;
+import com.max.tour.bean.greendao.CommentDao;
 import com.max.tour.bean.greendao.DaoSession;
+import com.max.tour.bean.greendao.RateDao;
 import com.max.tour.bean.greendao.SightsDao;
 import com.max.tour.bean.greendao.UserDao;
+import com.max.tour.constants.Constant;
 import com.max.tour.utils.StringUtils;
 
 import org.greenrobot.greendao.query.QueryBuilder;
@@ -206,6 +211,7 @@ public class DbHelper {
 
     /**
      * 查询单个景点
+     *
      * @param item 位置
      * @return 景点信息
      */
@@ -222,43 +228,78 @@ public class DbHelper {
         return null;
     }
 
+
     /**
-     * 根据景区id查询评分
+     * 提交评论
      *
-     * @param id
-     * @return
+     * @param msg      消息
+     * @param mUserId  用户ID
+     * @param mSightId 景区ID
+     * @return ture = 提交成功
      */
-    public static float queryRating(int id) {
-//        float rateCount = 0f;
-//        List<Rate> rates = LitePal.findAll(Rate.class, id);
-//        for (Rate rate : rates) {
-//            rateCount += rate.getScore();
-//        }
-//        if (rates.size() == 0) {
-//            return 0f;
-//        }
-//        return rateCount / rates.size();
-//    }
-//
-//    public static void saveComment(String msg, int mUserId, int mSightId) {
-//
-//        Comment comment = new Comment();
-//        comment.setContent(msg);
-//        comment.setAddtime(new Date());
-//        comment.setReply("");
-//        comment.save();
-//
-//        User user = LitePal.find(User.class, mUserId);
-//        user.getComments().add(comment);
-//        user.save();
-//
-//        Sights sights = LitePal.find(Sights.class, mSightId);
-//        sights.getComments().add(comment);
-//        sights.save();
-        return 0f;
-
-
+    public static boolean saveComment(String msg, long mUserId, long mSightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        Comment comment = new Comment();
+        comment.setUserId(mUserId);
+        comment.setSightId(mSightId);
+        comment.setUserIcon(Constant.mUserIcon);
+        comment.setContent(msg);
+        comment.setAddtime(new Date());
+        comment.setReply("");
+        return daoSession.insert(comment) > 0;
     }
 
 
+    /**
+     * 获取评论列表
+     *
+     * @return 评论列表
+     */
+    public static List<Comment> getComments(long mSightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        // 提交成功  查询评论列表
+        QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
+        qb.where(CommentDao.Properties.SightId.eq(mSightId));
+        return qb.list();
+    }
+
+    public static List<Rate> getSightRating(long mSightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        // 提交成功  查询评论列表
+        QueryBuilder<Rate> qb = daoSession.queryBuilder(Rate.class);
+        qb.where(RateDao.Properties.SightId.eq(mSightId));
+        return qb.list();
+    }
+
+    public static float getAverageRating(long mSightId) {
+        float rating = 0f;
+        List<Rate> list = getSightRating(mSightId);
+        if (list.size() == 0) {
+            return rating;
+        }
+        for (Rate rate : list) {
+            rating += rate.getScore();
+        }
+        return rating / list.size();
+    }
+
+    /**
+     * 恢复评论
+     * @param commendId
+     * @param msg
+     */
+    public static boolean updateComment(long commendId,String msg) {
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
+        qb.where(CommentDao.Properties.Id.eq(commendId));
+        List<Comment> comments = qb.list();
+        if (comments.size() > 0) {
+            Comment comment = comments.get(0);
+            comment.setReply(msg);
+            daoSession.update(comment);
+            return true;
+        }
+        return false;
+    }
 }

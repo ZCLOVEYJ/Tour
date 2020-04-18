@@ -14,13 +14,16 @@ import android.widget.TextView;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.max.tour.R;
 import com.max.tour.bean.Comment;
 import com.max.tour.bean.Sights;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
+import com.max.tour.helper.DataUtils;
+import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
-import com.max.tour.ui.adapter.RemarkAdapter;
+import com.max.tour.ui.adapter.CommentAdapter;
 import com.max.tour.utils.BasicTool;
 import com.willy.ratingbar.BaseRatingBar;
 import com.willy.ratingbar.ScaleRatingBar;
@@ -43,7 +46,7 @@ import io.reactivex.schedulers.Schedulers;
 /**
  * 景区详情页
  */
-public class SightDetailsActivity extends MyActivity {
+public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter.OnItemChildClickListener {
 
 
     @BindView(R.id.recyclerView)
@@ -64,11 +67,12 @@ public class SightDetailsActivity extends MyActivity {
 
     List<Comment> mList;
     LinearLayoutManager mLayoutManager;
-    RemarkAdapter mAdapter;
+    CommentAdapter mAdapter;
 
 
     View mHeaderView;
     TextView mName;
+    TextView mTvScore;
     ScaleRatingBar mRatingBar;
     TextView mAddress;
     TextView mStatus;
@@ -79,6 +83,8 @@ public class SightDetailsActivity extends MyActivity {
 
     Sights mBean;
     Bundle mBundle;
+
+    long mCommentId = -1;
 
     /**
      * false = 回复,true = 评论
@@ -102,6 +108,9 @@ public class SightDetailsActivity extends MyActivity {
 
     @Override
     protected void initView() {
+
+//                KeyboardWatcher.with(this)
+//                .setListener(this);
 
         mBundle = getIntent().getBundleExtra("value");
         mBean = (Sights) mBundle.getSerializable("sight");
@@ -129,12 +138,17 @@ public class SightDetailsActivity extends MyActivity {
 
     private void initAdapter() {
         mList = new ArrayList<>();
-        mAdapter = new RemarkAdapter(this, mList);
+        mAdapter = new CommentAdapter(this, mList);
         mAdapter.addHeaderView(mHeaderView);
         mAdapter.addFooterView(mFooterView);
+        mAdapter.setOnItemChildClickListener(this);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
+
+        getCommentsList();
+
+
     }
 
     /**
@@ -161,6 +175,7 @@ public class SightDetailsActivity extends MyActivity {
 
         // name
         mName = mHeaderView.findViewById(R.id.tv_title);
+        mTvScore = mHeaderView.findViewById(R.id.tv_rating);
         mRatingBar = mHeaderView.findViewById(R.id.ratingBar);
         mAddress = mHeaderView.findViewById(R.id.tv_address);
         mStatus = mHeaderView.findViewById(R.id.tv_status);
@@ -183,93 +198,50 @@ public class SightDetailsActivity extends MyActivity {
         mRatingBar.setClickable(false);
         mRatingBar.setClearRatingEnabled(false);
         mRatingBar.setScrollable(false);
-//        queryRating(mBean.getId());
+        queryRating(mBean.getId());
 
 
     }
 
-//    private void queryRating(int id) {
-//        Observable
-//                .create(new ObservableOnSubscribe<HttpData<Float>>() {
-//                    @Override
-//                    public void subscribe(ObservableEmitter<HttpData<Float>> emitter) throws Exception {
-//
-//                        float ratingStr = DbHelper.queryRating(id);
-//                        HttpData bean = DataUtils.getInstance().getData(200, "", ratingStr);
-//                        emitter.onNext(bean);
-//                    }
-//                })
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeOn(Schedulers.io())
-//                .subscribe(new Observer<HttpData<Float>>() {
-//                    @Override
-//                    public void onSubscribe(Disposable d) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onNext(HttpData<Float> data) {
-//                        if (200 == data.getCode() && data.getData() != null) {
-//                            Float rating = data.getData();
-//                            mRatingBar.setClearRatingEnabled(true);
-//                            mRatingBar.setRating(rating);
-//                            LogUtils.i("-------？？/？--------",rating);
-//                        }
-//
-//                        LogUtils.i("-------查询到了吗？--------");
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable e) {
-//                        ToastUtils.showShort("请求错误");
-//
-//                    }
-//
-//                    @Override
-//                    public void onComplete() {
-//
-//                    }
-//                });
-//    }
+    private void queryRating(Long id) {
 
-//    private void queryRemark(int id) {
-//        Observable
-//                .create(new ObservableOnSubscribe<HttpData<List<Comment>>>() {
-//                    @Override
-//                    public void subscribe(ObservableEmitter<HttpData<List<Comment>>> emitter) throws Exception {
-//
-//                        List<Comment> list = DbHelper.queryRemarkList(id);
-//                        emitter.onNext(bean);
-//                    }
-//                })
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeOn(Schedulers.io())
-//                .subscribe(new Observer<HttpData<List<Comment>>>() {
-//                    @Override
-//                    public void onSubscribe(Disposable d) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onNext(HttpData<List<Comment>> data) {
-//                        if (200 == data.getCode() && data.getData() != null) {
-//
-//                        }
-//
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable e) {
-//                        ToastUtils.showShort("请求错误");
-//
-//                    }
-//
-//                    @Override
-//                    public void onComplete() {
-//
-//                    }
-//                });
-//    }
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<Float>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<Float>> emitter) throws Exception {
+
+                        float score = DbHelper.getAverageRating(mSightId);
+                        emitter.onNext(DataUtils.getInstance().getData(200, "", score));
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<Float>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<Float> data) {
+                        mRatingBar.setRating(data.getData());
+                        mTvScore.setText(data.getData() + "分");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
 
     private void initFooter() {
         mFooterView = View.inflate(this, R.layout.layout_details_footer, null);
@@ -286,14 +258,7 @@ public class SightDetailsActivity extends MyActivity {
         switch (view.getId()) {
             case R.id.tv_public_comment:
 
-                mLlytPublicComment.setVisibility(View.GONE);
-                mLlytPublicCommentReply.setVisibility(View.VISIBLE);
-                mEtPublicComment.setHint("发表你的评论");
-                mEtPublicComment.requestFocus();
-                mEtPublicComment.callOnClick();
-                isComment = true;
-                isCommentId = 0 + "";
-                BasicTool.showInput(mEtPublicComment);
+                showInput();
                 break;
             case R.id.llyt_public_comment:
                 break;
@@ -302,7 +267,8 @@ public class SightDetailsActivity extends MyActivity {
                     ToastUtils.showShort("评论不能为空");
                     return;
                 }
-                commitMsg(mEtPublicComment.getText().toString().trim());
+
+                commitMsg(mEtPublicComment.getText().toString().trim(), mCommentId);
 
 
                 break;
@@ -313,17 +279,43 @@ public class SightDetailsActivity extends MyActivity {
         }
     }
 
+    private void showInput() {
+        mLlytPublicComment.setVisibility(View.GONE);
+        mLlytPublicCommentReply.setVisibility(View.VISIBLE);
+        mEtPublicComment.setHint("发表你的评论");
+        mEtPublicComment.requestFocus();
+        mEtPublicComment.callOnClick();
+        isComment = true;
+        isCommentId = 0 + "";
+        BasicTool.showInput(mEtPublicComment);
+    }
 
-    private void commitMsg(String msg) {
+
+    private void commitMsg(String msg, long commentId) {
 
         Observable
                 .create(new ObservableOnSubscribe<HttpData<String>>() {
                     @Override
                     public void subscribe(ObservableEmitter<HttpData<String>> emitter) throws Exception {
+                        if (commentId == -1) {
+                            // 提交评论
+                            if (DbHelper.saveComment(msg, Constant.mUserId, mSightId)) {
 
+                                emitter.onNext(DataUtils.getInstance().getData(200, "", ""));
 
-                        // 提交评论
-//                        DbHelper.saveComment(msg, Constant.mUserId, mSightId);
+                            } else {
+                                emitter.onNext(DataUtils.getInstance().getData(1005, "", ""));
+                            }
+                        } else {
+                            // 更新回复
+                            if (DbHelper.updateComment(commentId, msg)) {
+
+                                emitter.onNext(DataUtils.getInstance().getData(200, "", ""));
+
+                            } else {
+                                emitter.onNext(DataUtils.getInstance().getData(1005, "", ""));
+                            }
+                        }
 
 
                     }
@@ -339,15 +331,17 @@ public class SightDetailsActivity extends MyActivity {
                     @Override
                     public void onNext(HttpData<String> data) {
                         if (200 == data.getCode() && data.getData() != null) {
+                            // 查询评论列表
+                            getCommentsList();
 
-                            // 已发送 跳转到 输入验证码页面
-//                            jump(data.getData());
+                        } else {
+                            ToastUtils.showShort("信息提交失败");
                         }
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        ToastUtils.showShort("请求错误");
+                        ToastUtils.showShort(e.getMessage());
 
                     }
 
@@ -356,5 +350,58 @@ public class SightDetailsActivity extends MyActivity {
 
                     }
                 });
+    }
+
+    private void getCommentsList() {
+
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<List<Comment>>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<List<Comment>>> emitter) throws Exception {
+
+                        List<Comment> list = DbHelper.getComments(mSightId);
+                        emitter.onNext(DataUtils.getInstance().getData(200, "", list));
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<List<Comment>>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<List<Comment>> data) {
+                        if (data.getData() != null) {
+                            mList.clear();
+                            mList.addAll(data.getData());
+                            mAdapter.setNewData(mList);
+                        } else {
+                            ToastUtils.showShort("获取评论列表失败");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    @Override
+    public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
+        Comment comment = mList.get(position);
+        mCommentId = comment.getId();
+        showInput();
+
+
     }
 }
