@@ -3,15 +3,16 @@ package com.max.tour.ui.fragment;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
@@ -26,25 +27,26 @@ import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.MyLocationStyle;
-import com.amap.api.maps2d.model.PolygonOptions;
+import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
-import com.amap.api.services.district.DistrictItem;
-import com.amap.api.services.district.DistrictResult;
-import com.amap.api.services.district.DistrictSearch;
-import com.amap.api.services.district.DistrictSearchQuery;
-import com.amap.api.services.geocoder.GeocodeQuery;
-import com.amap.api.services.geocoder.GeocodeResult;
-import com.amap.api.services.geocoder.GeocodeSearch;
-import com.amap.api.services.geocoder.RegeocodeResult;
+import com.amap.api.services.core.SuggestionCity;
+import com.amap.api.services.help.Tip;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
 import com.max.tour.R;
 import com.max.tour.bean.Sights;
+import com.max.tour.event.SearchEvent;
 import com.max.tour.helper.DbHelper;
+import com.max.tour.ui.activity.SearchActivity;
 import com.max.tour.ui.activity.SightDetailsActivity;
 import com.tbruyelle.rxpermissions2.RxPermissions;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,13 +62,20 @@ import java.util.List;
  * <p>
  * Ver 2.2, 2020-04-14, ZhengChen, Create file
  */
-public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListener, AMapLocationListener, AMap.OnMarkerClickListener,
-        DistrictSearch.OnDistrictSearchListener, GeocodeSearch.OnGeocodeSearchListener,
-        AMap.OnMapClickListener, AMap.OnInfoWindowClickListener, AMap.OnCameraChangeListener, AMap.OnMapTouchListener {
+public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListener, AMapLocationListener,
+        AMap.OnMarkerClickListener, AMap.OnMapClickListener,
+        AMap.OnInfoWindowClickListener, AMap.OnCameraChangeListener {
+
+    public static final String KEYWORDS = "风景名胜";
 
 
     private View mView;
     MapView mMapView = null;
+
+    LinearLayout mLayoutSearch;
+    TextView mTvKeywords;
+    ImageView mIvClose;
+
     /**
      * 权限
      */
@@ -88,11 +97,33 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
     int mPosition = -1;
 
-    boolean isFirstClick = true;
+    /**
+     * poi返回的结果
+     */
+    private PoiResult poiResult;
+    private int currentPage = 1;
+    /**
+     * Poi查询条件类
+     */
+    private PoiSearch.Query query;
+    /**
+     * POI搜索
+     */
+    private PoiSearch poiSearch;//
+    private Marker mPoiMarker;
+
+    private String mCityCode;
+    private String mCityName;
 
 
     public static HomeFragment newInstance() {
         return new HomeFragment();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -118,11 +149,37 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                         LogUtils.i("已同意权限");
                         // 初始化MapView
                         initMap(savedInstanceState);
+                        initSearchLayout();
+
+
                     } else {
                         LogUtils.i("拒绝权限");
                     }
                 }
         );
+    }
+
+    private void initSearchLayout() {
+        mLayoutSearch = mView.findViewById(R.id.layout_search);
+        mTvKeywords = mView.findViewById(R.id.tv_keywords);
+        mIvClose = mView.findViewById(R.id.iv_close);
+        mLayoutSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), SearchActivity.class);
+                startActivity(intent);
+
+            }
+        });
+        mIvClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mIvClose.setVisibility(View.GONE);
+                mTvKeywords.setText("");
+                doSearchQuery(KEYWORDS, mCityCode);
+            }
+        });
+
     }
 
     /**
@@ -154,6 +211,22 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             aMap.setOnInfoWindowClickListener(this);
             aMap.setOnMarkerClickListener(this);
             aMap.setOnCameraChangeListener(this);
+            aMap.setInfoWindowAdapter(new AMap.InfoWindowAdapter() {
+                @Override
+                public View getInfoWindow(Marker marker) {
+                    View infoWidow = LayoutInflater.from(getActivity()).inflate(
+                            R.layout.layout_info_window, null);
+
+                    render(marker, infoWidow);
+
+                    return infoWidow;
+                }
+
+                @Override
+                public View getInfoContents(Marker marker) {
+                    return null;
+                }
+            });
 
             //声明AMapLocationClient类对象
             mLocationClient = new AMapLocationClient(getActivity());
@@ -179,6 +252,11 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mMapView.onResume();
+    }
 
     @Override
     public void onPause() {
@@ -195,10 +273,32 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     }
 
     @Override
-    public void onPoiSearched(PoiResult poiResult, int i) {
-        LogUtils.i("-------onPoiSearched-------", poiResult.getPois());
+    public void onPoiSearched(PoiResult result, int i) {
 
-        initMarker(poiResult.getPois());
+        if (i == 1000) {
+            if (result != null && result.getQuery() != null) {// 搜索poi的结果
+                if (result.getQuery().equals(query)) {
+                    poiResult = result;
+                    //是否是同一条
+                    List<PoiItem> poiItems = poiResult.getPois();// 取得第一页的poiitem数据，页数从数字0开始
+                    List<SuggestionCity> suggestionCities = poiResult
+                            .getSearchSuggestionCitys();// 当搜索不到poiitem数据时，会返回含有搜索关键字的城市信息
+
+                    if (poiItems != null && poiItems.size() > 0) {
+                        aMap.clear();// 清理之前的图标
+                        initMarker(poiItems);
+                    } else if (suggestionCities != null
+                            && suggestionCities.size() > 0) {
+                        showSuggestCity(suggestionCities);
+                    } else {
+                        ToastUtils.showShort("对不起，没有搜索到相关数据！");
+                    }
+
+                }
+
+            }
+        }
+
     }
 
     /**
@@ -206,31 +306,19 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
      *
      * @param pois PoiItem
      */
-    private void initMarker(ArrayList<PoiItem> pois) {
+    private void initMarker(List<PoiItem> pois) {
+        mList.clear();
         mList.addAll(pois);
         for (int i = 0; i < mList.size(); i++) {
             LatLng latLng = new LatLng(pois.get(i).getLatLonPoint().getLatitude(), pois.get(i).getLatLonPoint().getLongitude());
             String title = pois.get(i).getTitle();
             String url = pois.get(i).getPhotos().size() > 0 ? pois.get(i).getPhotos().get(0).getUrl() : "";
-            aMap.addMarker(new MarkerOptions().position(latLng).title(title).snippet(url));
-            aMap.setInfoWindowAdapter(new AMap.InfoWindowAdapter() {
-                @Override
-                public View getInfoWindow(Marker marker) {
-                    View infoWidow = LayoutInflater.from(getActivity()).inflate(
-                            R.layout.layout_info_window, null);
-
-                    render(marker, infoWidow);
-
-                    return infoWidow;
-                }
-
-                @Override
-                public View getInfoContents(Marker marker) {
-                    return null;
-                }
-            });
+            aMap.addMarker(new MarkerOptions().position(latLng).title(title).snippet(url).period(1));
 
         }
+        LatLng latLng = new LatLng(pois.get(0).getLatLonPoint().getLatitude(), pois.get(0).getLatLonPoint().getLongitude());
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+
 
     }
 
@@ -243,45 +331,40 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     private void render(Marker marker, View infoWidow) {
         ImageView ivPic = infoWidow.findViewById(R.id.iv_pic);
         TextView tvTitle = infoWidow.findViewById(R.id.tv_title);
+        TextView tvAddress = infoWidow.findViewById(R.id.tv_address);
         tvTitle.setText(marker.getTitle());
-        Glide.with(this).load(marker.getSnippet()).into(ivPic);
+        if (1 == marker.getPeriod()) {
+            Glide.with(this).load(marker.getSnippet()).into(ivPic);
+            ivPic.setVisibility(View.VISIBLE);
+            tvAddress.setVisibility(View.GONE);
+        } else {
+            ivPic.setVisibility(View.GONE);
+            tvAddress.setVisibility(View.VISIBLE);
+            tvAddress.setText(marker.getSnippet());
+        }
 
 
     }
 
     @Override
     public void onPoiItemSearched(PoiItem poiItem, int i) {
-        LogUtils.i("-------onPoiItemSearched-------", poiItem);
     }
 
 
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
-        LogUtils.i("-------onLocationChanged-------", aMapLocation.getCityCode());
         // 设置地图比例
-
-        LatLng latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());//构造一个位置
-        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+        LatLng latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+//        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
         //初始化位置信息的所有景点信息
-        initLocationPlace(aMapLocation.getCityCode());
+        mCityCode = aMapLocation.getCityCode();
+        mCityName = aMapLocation.getCity();
+        doSearchQuery(KEYWORDS, mCityCode);
     }
 
-    /**
-     * 初始化景点信息
-     *
-     * @param cityCode 城市编码
-     */
-    private void initLocationPlace(String cityCode) {
-        PoiSearch.Query query = new PoiSearch.Query("风景名胜", "", cityCode);
-        query.setPageSize(100);
-        PoiSearch poiSearch = new PoiSearch(getActivity(), query);
-        poiSearch.setOnPoiSearchListener(this);
-        poiSearch.searchPOIAsyn();
-    }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        LogUtils.i("-------onMarkerClick-------", marker.getTitle(), marker.getSnippet());
         marker.showInfoWindow();
         for (int i = 0; i < mList.size(); i++) {
             if (marker.getTitle().equals(mList.get(i).getTitle())) {
@@ -295,106 +378,107 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     }
 
 
-    private void cavasDis(PoiItem item) {
-        DistrictSearch search = new DistrictSearch(getActivity());
-        DistrictSearchQuery query = new DistrictSearchQuery();
-        query.setKeywords(item.getTitle());//传入关键字
-        query.setShowBoundary(true);//是否返回边界值
-        search.setQuery(query);
-        search.setOnDistrictSearchListener(this);//绑定监听器
-        search.searchDistrictAsyn();//开始搜索
-        //
-        GeocodeSearch geocoderSearch = new GeocodeSearch(getActivity());
-        geocoderSearch.setOnGeocodeSearchListener(this);
-        GeocodeQuery queryGeo = new GeocodeQuery(item.getTitle(), "010");
-        geocoderSearch.getFromLocationNameAsyn(queryGeo);
-    }
-
-    @Override
-    public void onDistrictSearched(DistrictResult districtResult) {
-        LogUtils.i("-----" + districtResult.getAMapException().getErrorCode() + "------");
-        if (districtResult.getAMapException().getErrorCode() == 1000) {
-            ArrayList<DistrictItem> list = districtResult.getDistrict();
-
-            LogUtils.i("-----" + list.size() + "------");
-            // 声明 多边形参数对象
-            PolygonOptions polygonOptions = new PolygonOptions();
-            // 添加 多边形的每个顶点（顺序添加）
-            for (int i = 0; i < list.size(); i++) {
-                LatLng latLng = new LatLng(list.get(i).getCenter().getLatitude(), list.get(i).getCenter().getLongitude());
-                polygonOptions.add(latLng);
-            }
-            polygonOptions.strokeWidth(15) // 多边形的边框
-                    .strokeColor(Color.argb(50, 1, 1, 1)) // 边框颜色
-                    .fillColor(Color.argb(1, 1, 1, 1));   // 多边形的填充色
-
-            aMap.addPolygon(polygonOptions);
-        }
-    }
-
-    @Override
-    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
-        LogUtils.i("--------onRegeocodeSearched-------" + regeocodeResult + "------------");
-    }
-
-    @Override
-    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
-        LogUtils.i("--------onGeocodeSearched-------" + geocodeResult + "------------");
-        LogUtils.i(geocodeResult.getGeocodeAddressList().size());
-    }
-
     @Override
     public void onMapClick(LatLng latLng) {
-        for (int i = 0; i < aMap.getMapScreenMarkers().size(); i++) {
-            if (aMap.getMapScreenMarkers().get(i).isInfoWindowShown()) {
-                aMap.getMapScreenMarkers().get(i).hideInfoWindow();
-                mPosition = -1;
-            }
+
+        if (aMap.getMapScreenMarkers().get(mPosition).isInfoWindowShown()) {
+            aMap.getMapScreenMarkers().get(mPosition).hideInfoWindow();
+            mPosition = -1;
         }
+
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
 
-        for (int i = 0; i < mList.size(); i++) {
-            if (marker.getTitle().equals(mList.get(i).getTitle())) {
-                mPosition = i;
-            }
+        Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
+        intent.putExtra("lat_lon", marker.getPosition());
+        getActivity().startActivity(intent);
+
+        if (marker.isInfoWindowShown()) {
+            marker.hideInfoWindow();
+            mPosition = -1;
         }
-        if (mPosition != -1) {
-
-            Sights bean = DbHelper.findSightByLatLon(mList.get(mPosition));
-            if (bean != null) {
-                Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putSerializable("sight", bean);
-                intent.putExtra("value", bundle);
-                getActivity().startActivity(intent);
-
-                if (marker.isInfoWindowShown()) {
-                    marker.hideInfoWindow();
-                    mPosition = -1;
-                }
-            }
-
-
-        }
-
 
     }
 
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
-        LogUtils.i("-----------onCameraChange------------");
     }
 
     @Override
     public void onCameraChangeFinish(CameraPosition cameraPosition) {
-        LogUtils.i("-----------onCameraChangeFinish------------");
     }
 
+
     @Override
-    public void onTouch(MotionEvent motionEvent) {
-        LogUtils.i("-----------onTouch------------");
+    public void onDestroyView() {
+        super.onDestroyView();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetMessage(SearchEvent event) {
+        if (event != null) {
+            if (1 == event.getTag()) {
+                // 关键子搜索
+                aMap.clear();
+                String keywords = event.getKeywords();
+                if (keywords != null && !keywords.equals("")) {
+                    doSearchQuery(keywords, "");
+                }
+                mTvKeywords.setText(keywords);
+                if (!keywords.equals("")) {
+                    mIvClose.setVisibility(View.VISIBLE);
+                }
+
+            } else if (2 == event.getTag()) {
+                // 这是tip搜索
+                aMap.clear();
+                Tip tip = event.getTip();
+                if (tip.getPoiID() == null || tip.getPoiID().equals("")) {
+                    doSearchQuery(tip.getName(), mCityCode);
+                } else {
+                    doSearchQuery(tip.getName(), "");
+                }
+                mTvKeywords.setText(tip.getName());
+                if (!tip.getName().equals("")) {
+                    mIvClose.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+    }
+
+    /**
+     * 开始进行poi搜索
+     */
+    protected void doSearchQuery(String keywords, String cityCode) {
+        //showProgressDialog();// 显示进度框
+        currentPage = 1;
+        // 第一个参数表示搜索字符串，第二个参数表示poi搜索类型，第三个参数表示poi搜索区域（空字符串代表全国）
+        query = new PoiSearch.Query(TextUtils.isEmpty(keywords) ? KEYWORDS : keywords, "", cityCode);
+        // 设置每页最多返回多少条poiitem
+        query.setPageSize(100);
+        // 设置查第一页
+        query.setPageNum(currentPage);
+
+        poiSearch = new PoiSearch(getActivity(), query);
+        poiSearch.setOnPoiSearchListener(this);
+        poiSearch.searchPOIAsyn();
+    }
+
+
+    /**
+     * poi没有搜索到数据，返回一些推荐城市的信息
+     */
+    private void showSuggestCity(List<SuggestionCity> cities) {
+        String infomation = "推荐城市\n";
+        for (int i = 0; i < cities.size(); i++) {
+            infomation += "城市名称:" + cities.get(i).getCityName() + "城市区号:"
+                    + cities.get(i).getCityCode() + "城市编码:"
+                    + cities.get(i).getAdCode() + "\n";
+        }
+        ToastUtils.showShort(infomation);
+
     }
 }

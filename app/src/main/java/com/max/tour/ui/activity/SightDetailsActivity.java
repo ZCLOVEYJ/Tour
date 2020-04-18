@@ -5,16 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.LogUtils;
+import com.amap.api.maps2d.model.LatLng;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -27,7 +24,6 @@ import com.max.tour.helper.DataUtils;
 import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.adapter.CommentAdapter;
-import com.max.tour.utils.BasicTool;
 import com.max.tour.widget.PopupInput;
 import com.willy.ratingbar.BaseRatingBar;
 import com.willy.ratingbar.ScaleRatingBar;
@@ -45,8 +41,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import razerdp.basepopup.BasePopupFlag;
-import razerdp.basepopup.BasePopupWindow;
 
 
 /**
@@ -80,7 +74,7 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
 
     Sights mBean;
-    Bundle mBundle;
+    LatLng mLatLng;
 
     long mCommentId = -1;
 
@@ -107,21 +101,60 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
     @Override
     protected void initView() {
 
-//                KeyboardWatcher.with(this)
-//                .setListener(this);
-
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
-        mBundle = getIntent().getBundleExtra("value");
-        mBean = (Sights) mBundle.getSerializable("sight");
-        if (mBean != null) {
+        mLatLng = getIntent().getParcelableExtra("lat_lon");
 
-            initBundleData();
+        querySight(mLatLng);
 
-            initHeader();
-            initFooter();
-            initAdapter();
-        }
+
+
+    }
+
+    private void querySight(LatLng mLatLng) {
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<Sights>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<Sights>> emitter) throws Exception {
+
+                        Sights sights = DbHelper.findSightByLatLon(mLatLng);
+                        emitter.onNext(DataUtils.getInstance().getData(200, "", sights));
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<Sights>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<Sights> data) {
+                        if (data.getData() != null) {
+                            mBean = data.getData();
+                            initBundleData();
+                            initHeader();
+                            initFooter();
+                            initAdapter();
+
+                        } else {
+                            ToastUtils.showShort("查找景区失败");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
     }
 
@@ -201,7 +234,6 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
         mRatingBar.setOnRatingChangeListener(new BaseRatingBar.OnRatingChangeListener() {
             @Override
             public void onRatingChange(BaseRatingBar ratingBar, float rating, boolean fromUser) {
-                LogUtils.i("变化了吗-------");
             }
         });
         mRatingBar.setRating(1);

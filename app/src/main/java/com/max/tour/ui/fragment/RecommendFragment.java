@@ -1,12 +1,12 @@
 package com.max.tour.ui.fragment;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.amap.api.maps2d.model.LatLng;
 import com.blankj.utilcode.util.ToastUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.max.tour.R;
@@ -164,10 +164,8 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
         Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("sight", mList.get(position));
-        intent.putExtra("value", bundle);
-
+        LatLng latLng = new LatLng(mList.get(position).getLatitude(), mList.get(position).getLongitude());
+        intent.putExtra("lat_lon", latLng);
         getActivity().startActivity(intent);
     }
 }

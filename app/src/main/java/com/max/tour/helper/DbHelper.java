@@ -1,5 +1,6 @@
 package com.max.tour.helper;
 
+import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.blankj.utilcode.util.LogUtils;
@@ -220,6 +221,18 @@ public class DbHelper {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
         qb.where(SightsDao.Properties.Latitude.eq(latLonPoint.getLatitude()), SightsDao.Properties.Longitude.eq(latLonPoint.getLongitude()));
+        List<Sights> sights = qb.list();
+        if (sights.size() > 0) {
+            return sights.get(0);
+        }
+        return null;
+    }
+
+    public static Sights findSightByLatLon(LatLng latLng) {
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.where(SightsDao.Properties.Latitude.eq(latLng.latitude), SightsDao.Properties.Longitude.eq(latLng.longitude));
         List<Sights> sights = qb.list();
         if (sights.size() > 0) {
             return sights.get(0);
