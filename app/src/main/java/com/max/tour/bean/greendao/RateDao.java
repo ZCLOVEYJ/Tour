@@ -30,7 +30,7 @@ public class RateDao extends AbstractDao<Rate, Long> {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property UserId = new Property(1, Long.class, "userId", false, "USER_ID");
         public final static Property SightId = new Property(2, Long.class, "sightId", false, "SIGHT_ID");
-        public final static Property Score = new Property(3, Integer.class, "score", false, "SCORE");
+        public final static Property Score = new Property(3, Float.class, "score", false, "SCORE");
         public final static Property Ratingtime = new Property(4, java.util.Date.class, "ratingtime", false, "RATINGTIME");
         public final static Property Others = new Property(5, String.class, "others", false, "OTHERS");
     }
@@ -53,7 +53,7 @@ public class RateDao extends AbstractDao<Rate, Long> {
                 "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
                 "\"USER_ID\" INTEGER," + // 1: userId
                 "\"SIGHT_ID\" INTEGER," + // 2: sightId
-                "\"SCORE\" INTEGER," + // 3: score
+                "\"SCORE\" REAL," + // 3: score
                 "\"RATINGTIME\" INTEGER," + // 4: ratingtime
                 "\"OTHERS\" TEXT);"); // 5: others
     }
@@ -83,9 +83,9 @@ public class RateDao extends AbstractDao<Rate, Long> {
             stmt.bindLong(3, sightId);
         }
  
-        Integer score = entity.getScore();
+        Float score = entity.getScore();
         if (score != null) {
-            stmt.bindLong(4, score);
+            stmt.bindDouble(4, score);
         }
  
         java.util.Date ratingtime = entity.getRatingtime();
@@ -118,9 +118,9 @@ public class RateDao extends AbstractDao<Rate, Long> {
             stmt.bindLong(3, sightId);
         }
  
-        Integer score = entity.getScore();
+        Float score = entity.getScore();
         if (score != null) {
-            stmt.bindLong(4, score);
+            stmt.bindDouble(4, score);
         }
  
         java.util.Date ratingtime = entity.getRatingtime();
@@ -145,7 +145,7 @@ public class RateDao extends AbstractDao<Rate, Long> {
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.isNull(offset + 1) ? null : cursor.getLong(offset + 1), // userId
             cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2), // sightId
-            cursor.isNull(offset + 3) ? null : cursor.getInt(offset + 3), // score
+            cursor.isNull(offset + 3) ? null : cursor.getFloat(offset + 3), // score
             cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // ratingtime
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // others
         );
@@ -157,7 +157,7 @@ public class RateDao extends AbstractDao<Rate, Long> {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setUserId(cursor.isNull(offset + 1) ? null : cursor.getLong(offset + 1));
         entity.setSightId(cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2));
-        entity.setScore(cursor.isNull(offset + 3) ? null : cursor.getInt(offset + 3));
+        entity.setScore(cursor.isNull(offset + 3) ? null : cursor.getFloat(offset + 3));
         entity.setRatingtime(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
         entity.setOthers(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
      }

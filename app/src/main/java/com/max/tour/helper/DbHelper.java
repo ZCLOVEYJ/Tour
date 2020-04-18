@@ -21,7 +21,6 @@ import com.max.tour.utils.StringUtils;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -285,10 +284,11 @@ public class DbHelper {
 
     /**
      * 恢复评论
+     *
      * @param commendId
      * @param msg
      */
-    public static boolean updateComment(long commendId,String msg) {
+    public static boolean updateComment(long commendId, String msg) {
 
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
@@ -301,5 +301,36 @@ public class DbHelper {
             return true;
         }
         return false;
+    }
+
+    public static Rate querySightWithUserRating(long userId, long sightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Rate> qb = daoSession.queryBuilder(Rate.class);
+        qb.where(RateDao.Properties.UserId.eq(userId)).where(RateDao.Properties.SightId.eq(sightId));
+        List<Rate> list = qb.list();
+        if (list.size() > 0) {
+            Rate rate = list.get(0);
+            return rate;
+        }
+        return null;
+    }
+
+
+    public static List<Rate> querySightRating(long sightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Rate> qb = daoSession.queryBuilder(Rate.class);
+        qb.where(RateDao.Properties.SightId.eq(sightId));
+        return qb.list();
+    }
+
+    public static boolean commitRating(long sightId, long userId, float ratings) {
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        Rate rate = new Rate();
+        rate.setUserId(userId);
+        rate.setSightId(sightId);
+        rate.setScore(ratings);
+        rate.setRatingtime(new Date());
+        return daoSession.insert(rate) > 0;
     }
 }

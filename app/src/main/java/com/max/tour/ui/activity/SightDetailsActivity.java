@@ -1,10 +1,13 @@
 package com.max.tour.ui.activity;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -25,6 +28,7 @@ import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.adapter.CommentAdapter;
 import com.max.tour.utils.BasicTool;
+import com.max.tour.widget.PopupInput;
 import com.willy.ratingbar.BaseRatingBar;
 import com.willy.ratingbar.ScaleRatingBar;
 
@@ -41,6 +45,8 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import razerdp.basepopup.BasePopupFlag;
+import razerdp.basepopup.BasePopupWindow;
 
 
 /**
@@ -51,18 +57,9 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
-    @BindView(R.id.tv_public_comment)
-    TextView mTvPublicComment;
-    @BindView(R.id.llyt_public_comment)
-    LinearLayout mLlytPublicComment;
-    @BindView(R.id.et_public_comment)
-    EditText mEtPublicComment;
-    @BindView(R.id.tv_public)
-    TextView mTvPublic;
-    @BindView(R.id.llyt_public_comment_reply)
-    LinearLayout mLlytPublicCommentReply;
-    @BindView(R.id.rl_layout_bottom)
-    RelativeLayout mRlLayoutBottom;
+
+    @BindView(R.id.layout_comment)
+    LinearLayout mLayoutComment;
 
 
     List<Comment> mList;
@@ -79,6 +76,7 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
     View mFooterView;
     BGABanner mBanner;
+    LinearLayout mLayoutRating;
 
 
     Sights mBean;
@@ -103,7 +101,7 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
     @Override
     protected int getLayoutId() {
-        return R.layout.activity_recommend_details;
+        return R.layout.activity_sight_details;
     }
 
     @Override
@@ -111,6 +109,8 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
 //                KeyboardWatcher.with(this)
 //                .setListener(this);
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         mBundle = getIntent().getBundleExtra("value");
         mBean = (Sights) mBundle.getSerializable("sight");
@@ -158,6 +158,16 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
         mHeaderView = View.inflate(this, R.layout.layout_details_header, null);
         mBanner = mHeaderView.findViewById(R.id.banner);
+        mLayoutRating = mHeaderView.findViewById(R.id.layout_rating);
+        mLayoutRating.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SightDetailsActivity.this, RatingActivity.class);
+                intent.putExtra("userId", mUserId);
+                intent.putExtra("sightId", mSightId);
+                startActivity(intent);
+            }
+        });
 
         mBanner.setAdapter(new BGABanner.Adapter<ImageView, String>() {
             @Override
@@ -253,41 +263,43 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
     }
 
 
-    @OnClick({R.id.tv_public_comment, R.id.llyt_public_comment, R.id.tv_public, R.id.llyt_public_comment_reply})
+    @OnClick({R.id.layout_comment,})
     public void onViewClicked(View view) {
         switch (view.getId()) {
-            case R.id.tv_public_comment:
 
+            case R.id.layout_comment:
                 showInput();
-                break;
-            case R.id.llyt_public_comment:
-                break;
-            case R.id.tv_public:
-                if (BasicTool.isEmpty(mEtPublicComment.getText().toString().trim())) {
-                    ToastUtils.showShort("评论不能为空");
-                    return;
-                }
 
-                commitMsg(mEtPublicComment.getText().toString().trim(), mCommentId);
-
+//                if (BasicTool.isEmpty(mEtPublicComment.getText().toString().trim())) {
+//                    ToastUtils.showShort("评论不能为空");
+//                    return;
+//                }
+//
 
                 break;
-            case R.id.llyt_public_comment_reply:
-                break;
+
             default:
                 break;
         }
     }
 
+    PopupInput mPopupInput;
+
     private void showInput() {
-        mLlytPublicComment.setVisibility(View.GONE);
-        mLlytPublicCommentReply.setVisibility(View.VISIBLE);
-        mEtPublicComment.setHint("发表你的评论");
-        mEtPublicComment.requestFocus();
-        mEtPublicComment.callOnClick();
-        isComment = true;
-        isCommentId = 0 + "";
-        BasicTool.showInput(mEtPublicComment);
+
+        if (mPopupInput == null) {
+            mPopupInput = new PopupInput(this).setListener(new PopupInput.SendListener() {
+                @Override
+                public void onSend(String msg) {
+                    commitMsg(msg, mCommentId);
+                }
+            });
+        }
+        mPopupInput.setAdjustInputMethod(true)
+                .setAutoShowInputMethod(mPopupInput.findViewById(R.id.ed_input), true)
+                .showPopupWindow();
+
+
     }
 
 

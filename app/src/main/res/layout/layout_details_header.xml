@@ -86,6 +86,7 @@
                 android:background="#F5F5F5" />
 
             <LinearLayout
+                android:id="@+id/layout_rating"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:gravity="center"

@@ -100,5 +100,7 @@ dependencies {
     implementation 'org.greenrobot:greendao:3.2.2'
     implementation 'org.greenrobot:greendao-generator:3.2.2'
 
+    implementation 'com.github.razerdp:BasePopup:2.2.1'
+
 
 }

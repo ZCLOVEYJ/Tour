@@ -21,7 +21,7 @@ public class CommentAdapter extends BaseQuickAdapter<Comment, BaseViewHolder> {
 
 
     public CommentAdapter(Context context, @Nullable List<Comment> data) {
-        super(R.layout.item_remark, data);
+        super(R.layout.item_comment, data);
         this.mContext = context;
     }
 

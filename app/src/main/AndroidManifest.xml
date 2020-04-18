@@ -130,6 +130,14 @@
 
         </activity>
 
+        <activity
+            android:name=".ui.activity.RatingActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+
+        </activity>
+
         <service android:name="com.amap.api.location.APSService"></service>
     </application>
 

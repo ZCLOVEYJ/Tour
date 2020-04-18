@@ -31,13 +31,13 @@ public class Rate implements Serializable {
     @Property
     private Long sightId;
     @Property
-    private Integer score;
+    private Float score;
     @Property
     private Date ratingtime;
     @Property
     private String others;
-    @Generated(hash = 2049468307)
-    public Rate(Long id, Long userId, Long sightId, Integer score, Date ratingtime,
+    @Generated(hash = 1964633123)
+    public Rate(Long id, Long userId, Long sightId, Float score, Date ratingtime,
             String others) {
         this.id = id;
         this.userId = userId;
@@ -67,10 +67,10 @@ public class Rate implements Serializable {
     public void setSightId(Long sightId) {
         this.sightId = sightId;
     }
-    public Integer getScore() {
+    public Float getScore() {
         return this.score;
     }
-    public void setScore(Integer score) {
+    public void setScore(Float score) {
         this.score = score;
     }
     public Date getRatingtime() {
@@ -85,6 +85,7 @@ public class Rate implements Serializable {
     public void setOthers(String others) {
         this.others = others;
     }
+    
 
 
 }
