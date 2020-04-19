@@ -21,6 +21,14 @@ public class SearchEvent {
 
     private Tip tip;
 
+    private int type;
+
+    private String locationName;
+
+    private double lau;
+
+    private double lon;
+
 
     public int getTag() {
         return tag;
@@ -44,5 +52,37 @@ public class SearchEvent {
 
     public void setTip(Tip tip) {
         this.tip = tip;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public String getLocationName() {
+        return locationName;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public double getLau() {
+        return lau;
+    }
+
+    public void setLau(double lau) {
+        this.lau = lau;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
     }
 }

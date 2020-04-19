@@ -12,17 +12,7 @@ import com.willy.ratingbar.ScaleRatingBar;
 
 import java.util.List;
 
-/**
- * Copyright (C) 2019, Relx
- * RatingAdapter
- * <p>
- * Description
- *
- * @author ZhengChen
- * @version 2.2
- * <p>
- * Ver 2.2, 2020-04-18, ZhengChen, Create file
- */
+
 public class RatingAdapter extends BaseQuickAdapter<Rate, BaseViewHolder> {
 
     private Context mContext;

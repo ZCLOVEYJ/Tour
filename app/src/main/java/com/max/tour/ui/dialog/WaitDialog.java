@@ -10,12 +10,7 @@ import com.hjq.base.BaseDialog;
 import com.hjq.base.action.AnimAction;
 import com.max.tour.R;
 
-/**
- *    author : Android 轮子哥
- *    github : https://github.com/getActivity/AndroidProject
- *    time   : 2018/12/2
- *    desc   : 等待加载对话框
- */
+
 public final class WaitDialog {
 
     public static final class Builder

@@ -167,6 +167,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), SearchActivity.class);
+                intent.putExtra("tag", 0);
                 startActivity(intent);
 
             }
@@ -250,6 +251,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             mMapView.onDestroy();
             mLocationClient.stopLocation();
         }
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -414,7 +416,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        EventBus.getDefault().unregister(this);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

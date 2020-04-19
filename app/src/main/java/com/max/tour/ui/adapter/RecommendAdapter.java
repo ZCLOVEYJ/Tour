@@ -12,17 +12,7 @@ import com.max.tour.bean.Sights;
 
 import java.util.List;
 
-/**
- * Copyright (C) 2019, Relx
- * RecommendAdapter
- * <p>
- * Description
- *
- * @author ZhengChen
- * @version 2.2
- * <p>
- * Ver 2.2, 2020-04-16, ZhengChen, Create file
- */
+
 public class RecommendAdapter extends BaseQuickAdapter<Sights, BaseViewHolder> {
 
 

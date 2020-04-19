@@ -2,19 +2,20 @@ package com.max.tour.ui.activity;
 
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.KeyEvent;
-import android.view.MenuItem;
-import android.view.View;
 
+import com.flyco.tablayout.CommonTabLayout;
+import com.flyco.tablayout.listener.CustomTabEntity;
+import com.flyco.tablayout.listener.OnTabSelectListener;
 import com.max.tour.R;
 import com.max.tour.common.MyActivity;
+import com.max.tour.event.RouteEvent;
+import com.max.tour.event.TabEntity;
 import com.max.tour.helper.ActivityStackManager;
 import com.max.tour.helper.DoubleClickHelper;
 import com.max.tour.helper.KeyboardWatcher;
@@ -23,6 +24,10 @@ import com.max.tour.ui.fragment.RecommendFragment;
 import com.max.tour.ui.fragment.RouteFragment;
 import com.max.tour.ui.fragment.UserFragment;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -30,17 +35,27 @@ import butterknife.BindView;
 /**
  * 主页面
  */
-public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyboardStateListener,
-        BottomNavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyboardStateListener {
 
     @BindView(R.id.vp_home_pager)
     ViewPager mViewPager;
-    @BindView(R.id.bv_home_navigation)
-    BottomNavigationView mBottomNavigationView;
+    @BindView(R.id.tabLayout)
+    CommonTabLayout mTabLayout;
+
+    private String[] mTitles = {"首页", "推荐", "路线", "我的"};
+
+    private int[] mIconUnselectIds = {
+            R.mipmap.tab_ico_home_off, R.mipmap.tab_ico_found_off,
+            R.mipmap.tab_ico_message_off, R.mipmap.tab_ico_me_off};
+    private int[] mIconSelectIds = {
+            R.mipmap.tab_ico_home, R.mipmap.tab_ico_found,
+            R.mipmap.tab_ico_message, R.mipmap.tab_ico_me};
 
     private ArrayList<Fragment> mFragments = new ArrayList<>();
 
     private MyPagerAdapter mPagerAdapter;
+
+    private ArrayList<CustomTabEntity> mTabEntities = new ArrayList<>();
 
 
     @Override
@@ -51,12 +66,9 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
     @SuppressLint("CheckResult")
     @Override
     protected void initView() {
-        // 不使用图标默认变色
-        mBottomNavigationView.setItemIconTintList(null);
-        mBottomNavigationView.setOnNavigationItemSelectedListener(this);
-
-//        KeyboardWatcher.with(this)
-//                .setListener(this);
+        for (int i = 0; i < mTitles.length; i++) {
+            mTabEntities.add(new TabEntity(mTitles[i], mIconSelectIds[i], mIconUnselectIds[i]));
+        }
 
 
     }
@@ -75,44 +87,33 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
 
         // 限制页面数量
         mViewPager.setOffscreenPageLimit(mPagerAdapter.getCount());
+
+        mTabLayout.setTabData(mTabEntities);
+        mTabLayout.setOnTabSelectListener(new OnTabSelectListener() {
+            @Override
+            public void onTabSelect(int position) {
+                mViewPager.setCurrentItem(position);
+            }
+
+            @Override
+            public void onTabReselect(int position) {
+
+            }
+        });
     }
 
-    /**
-     * {@link BottomNavigationView.OnNavigationItemSelectedListener}
-     */
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_home:
-                mViewPager.setCurrentItem(0);
-                return true;
-            case R.id.home_found:
-                mViewPager.setCurrentItem(1);
-                return true;
-            case R.id.home_message:
-                mViewPager.setCurrentItem(2);
-                return true;
-            case R.id.home_me:
-                mViewPager.setCurrentItem(3);
-                return true;
-            default:
-                break;
-        }
-        return false;
-    }
 
     /**
      * {@link KeyboardWatcher.SoftKeyboardStateListener}
      */
     @Override
     public void onSoftKeyboardOpened(int keyboardHeight) {
-        mBottomNavigationView.setVisibility(View.GONE);
+
     }
 
     @Override
     public void onSoftKeyboardClosed() {
-        mBottomNavigationView.setVisibility(View.VISIBLE);
+
     }
 
     @Override
@@ -145,8 +146,14 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
     @Override
     protected void onDestroy() {
         mViewPager.setAdapter(null);
-        mBottomNavigationView.setOnNavigationItemSelectedListener(null);
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
     }
 
     public class MyPagerAdapter extends FragmentPagerAdapter {
@@ -165,4 +172,14 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
             return mFragments.size();
         }
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetMessage(RouteEvent event) {
+        if (event != null) {
+            mTabLayout.setCurrentTab(0);
+            mViewPager.setCurrentItem(0);
+        }
+    }
+
+
 }

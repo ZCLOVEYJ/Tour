@@ -196,4 +196,6 @@
 
     <string name="photo_launch_fail">无法启动相机</string>
     <string name="photo_picture_error">图片错误</string>
+
+    <string name="no_result">对不起，没有搜索到相关数据！</string>
 </resources>
