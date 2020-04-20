@@ -1,8 +1,10 @@
 package com.max.tour.event;
 
+import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
+import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
 
 /**
@@ -23,7 +25,9 @@ public class RouteEvent {
      */
     private int tag;
 
-    private DrivePath path;
+    private DrivePath drivePath;
+    private BusPath busPath;
+    private WalkPath walkPath;
 
 
     private DriveRouteResult driveRouteResult;
@@ -41,12 +45,28 @@ public class RouteEvent {
         this.tag = tag;
     }
 
-    public DrivePath getPath() {
-        return path;
+    public DrivePath getDrivePath() {
+        return drivePath;
     }
 
-    public void setPath(DrivePath path) {
-        this.path = path;
+    public void setDrivePath(DrivePath drivePath) {
+        this.drivePath = drivePath;
+    }
+
+    public BusPath getBusPath() {
+        return busPath;
+    }
+
+    public void setBusPath(BusPath busPath) {
+        this.busPath = busPath;
+    }
+
+    public WalkPath getWalkPath() {
+        return walkPath;
+    }
+
+    public void setWalkPath(WalkPath walkPath) {
+        this.walkPath = walkPath;
     }
 
     public DriveRouteResult getDriveRouteResult() {

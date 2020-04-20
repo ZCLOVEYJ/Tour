@@ -16,6 +16,7 @@ import com.amap.api.services.geocoder.RegeocodeResult;
 import com.amap.api.services.help.Inputtips;
 import com.amap.api.services.help.InputtipsQuery;
 import com.amap.api.services.help.Tip;
+import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.gyf.immersionbar.ImmersionBar;
@@ -64,6 +65,7 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
         ImmersionBar.with(this).statusBarColor(R.color.white).fullScreen(true).autoDarkModeEnable(true);
 
         mTag = getIntent().getIntExtra("tag", -1);
+        LogUtils.iTag("TAG", mTag);
 
         initSearchView();
 
@@ -106,7 +108,7 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
         geocoderSearch.setOnGeocodeSearchListener(this);
     }
 
-    public void getLatlon(final String name, String adcode) {
+    public void getLauLon(final String name, String adcode) {
 
         // 第一个参数表示地址，第二个参数表示查询城市，中文或者中文全拼，citycode、adcode，
         GeocodeQuery query = new GeocodeQuery(name, adcode);
@@ -125,7 +127,7 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
             this.finish();
             return false;
         } else if (mTag == 1 || mTag == 2) {
-            getLatlon(keywords, "010");
+            getLauLon(keywords, "");
             return false;
         }
 
@@ -136,7 +138,7 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
     public boolean onQueryTextChange(String s) {
 
         if (!TextUtils.isEmpty(s)) {
-            InputtipsQuery inputquery = new InputtipsQuery(s, "北京");
+            InputtipsQuery inputquery = new InputtipsQuery(s, "");
             Inputtips inputTips = new Inputtips(SearchActivity.this.getApplicationContext(), inputquery);
             inputTips.setInputtipsListener(this);
             inputTips.requestInputtipsAsyn();
@@ -153,13 +155,9 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
     public void onGetInputtips(List<Tip> list, int rCode) {
         // 正确返回
         if (rCode == 1000) {
-            mTipList = list;
-            List<String> listString = new ArrayList<String>();
-            for (int i = 0; i < list.size(); i++) {
-                listString.add(list.get(i).getName());
-            }
+            mTipList.clear();
+            mTipList.addAll(list);
             mAdapter.setNewData(mTipList);
-
         } else {
             ToastUtils.showShort(rCode + "");
         }
@@ -167,24 +165,39 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
 
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-        if (mTipList != null) {
-            Tip tip = mTipList.get(position);
-            if (mTag == 0) {
+        Tip tip = mTipList.get(position);
+        if (mTag == 0) {
+            SearchEvent event = new SearchEvent();
+            event.setTag(2);
+            event.setKeywords("");
+            event.setTip(tip);
+            EventBus.getDefault().post(event);
+            this.finish();
 
+        } else if (1 == mTag || 2 == mTag) {
+            LogUtils.iTag("TAG"
+                    , tip.getAdcode()
+                    , tip.getAddress()
+                    , tip.getDistrict()
+                    , tip.getName()
+                    , tip.getPoiID()
+                    , tip.getPoint()
+                    , tip.getTypeCode());
+
+            if (tip.getPoint() != null) {
                 SearchEvent event = new SearchEvent();
-                event.setTag(2);
-                event.setKeywords("");
-                event.setTip(tip);
+                event.setLocationName(tip.getName());
+                event.setLon(tip.getPoint() != null ? tip.getPoint().getLongitude() : 0f);
+                event.setLau(tip.getPoint() != null ? tip.getPoint().getLatitude() : 0f);
+                event.setType(mTag);
                 EventBus.getDefault().post(event);
-                this.finish();
-
-            } else if (mTag == 1 || mTag == 2) {
-                getLatlon(tip.getName(), tip.getAdcode());
-
+                finish();
+            } else {
+                getLauLon(tip.getName(), "");
             }
+
+
         }
-
-
     }
 
 
@@ -196,10 +209,25 @@ public class SearchActivity extends MyActivity implements SearchView.OnQueryText
     @Override
     public void onGeocodeSearched(GeocodeResult result, int rCode) {
         if (rCode == AMapException.CODE_AMAP_SUCCESS) {
+            LogUtils.iTag("TAG", "city----" + result.getGeocodeQuery().getCity());
+            LogUtils.iTag("TAG", "location------" + result.getGeocodeQuery().getLocationName());
+            for (int i = 0; i < result.getGeocodeAddressList().size(); i++) {
+                GeocodeAddress address = result.getGeocodeAddressList().get(i);
+                LogUtils.iTag("TAG",
+                        i + "----" + address.getAdcode(),
+                        address.getFormatAddress(),
+                        address.getLatLonPoint(),
+                        address.getDistrict(),
+                        address.getCity(),
+                        address.getBuilding(),
+                        address.getLevel(),
+                        address.getProvince(),
+                        address.getTownship(),
+                        address.getNeighborhood());
+            }
             if (result != null && result.getGeocodeAddressList() != null
                     && result.getGeocodeAddressList().size() > 0) {
                 GeocodeAddress address = result.getGeocodeAddressList().get(0);
-
                 SearchEvent event = new SearchEvent();
                 event.setLocationName(result.getGeocodeQuery().getLocationName());
                 event.setLon(address.getLatLonPoint().getLongitude());

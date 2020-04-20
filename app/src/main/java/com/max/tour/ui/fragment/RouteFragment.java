@@ -15,12 +15,13 @@ import android.widget.TextView;
 
 import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
-import com.amap.api.services.help.Tip;
+import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.RideRouteResult;
 import com.amap.api.services.route.RouteSearch;
+import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
 import com.blankj.utilcode.util.ToastUtils;
 import com.flyco.tablayout.CommonTabLayout;
@@ -33,7 +34,6 @@ import com.max.tour.event.SearchEvent;
 import com.max.tour.ui.activity.MainActivity;
 import com.max.tour.ui.activity.SearchActivity;
 import com.max.tour.ui.adapter.RouteAdpter;
-import com.max.tour.utils.map.DrivingRouteOverlay;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -77,11 +77,10 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
 
     LinearLayoutManager mLayoutManager;
     RouteAdpter mAdapter;
+    private ProgressDialog progDialog = null;
 
-    private ProgressDialog progDialog = null;// 搜索时进度条
-
-    private LatLonPoint startPoint = new LatLonPoint(39.903588, 116.47357);//起点，39.942295,116.335891
-    private LatLonPoint endPoint = new LatLonPoint(39.993253, 116.473195);//终点，39.995576,116.481288
+    private LatLonPoint startPoint = new LatLonPoint(39.903588, 116.47357);
+    private LatLonPoint endPoint = new LatLonPoint(39.993253, 116.473195);
 
     private int routeType = 0;
 
@@ -174,7 +173,7 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
                     return;
                 }
                 // 查询路线
-                searchRoute(routeType, RouteSearch.DrivingDefault);
+                searchRoute(routeType);
 
                 break;
             default:
@@ -182,7 +181,7 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
         }
     }
 
-    private void searchRoute(int routeType, int mode) {
+    private void searchRoute(int routeType) {
 
         if (startPoint == null) {
             ToastUtils.showShort("定位中，稍后再试...");
@@ -197,18 +196,19 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
         if (routeType == 0) {
             // 驾车路径规划
             // 第一个参数表示路径规划的起点和终点，第二个参数表示驾车模式，第三个参数表示途经点，第四个参数表示避让区域，第五个参数表示避让道路
-            RouteSearch.DriveRouteQuery query = new RouteSearch.DriveRouteQuery(fromAndTo, mode, null,
+            RouteSearch.DriveRouteQuery query = new RouteSearch.DriveRouteQuery(fromAndTo, RouteSearch.DRIVEING_PLAN_DEFAULT, null,
                     null, "");
             // 异步路径规划驾车模式查询
             mRouteSearch.calculateDriveRouteAsyn(query);
         } else if (routeType == 1) {
             // 第一个参数表示路径规划的起点和终点，第二个参数表示公交查询模式，第三个参数表示公交查询城市区号，第四个参数表示是否计算夜班车，0表示不计算
-            RouteSearch.BusRouteQuery query = new RouteSearch.BusRouteQuery(fromAndTo, mode,
+            RouteSearch.BusRouteQuery query = new RouteSearch.BusRouteQuery(fromAndTo, RouteSearch.BUS_DEFAULT,
                     currentCityName, 0);
             // 异步路径规划公交模式查询
             mRouteSearch.calculateBusRouteAsyn(query);
         } else if (routeType == 2) {
-
+            RouteSearch.WalkRouteQuery query = new RouteSearch.WalkRouteQuery(fromAndTo);
+            mRouteSearch.calculateWalkRouteAsyn(query);
         }
     }
 
@@ -269,8 +269,32 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
     }
 
     @Override
-    public void onBusRouteSearched(BusRouteResult busRouteResult, int i) {
+    public void onBusRouteSearched(BusRouteResult result, int errorCode) {
+        dissmissProgressDialog();
+        if (errorCode == AMapException.CODE_AMAP_SUCCESS) {
+            if (result != null && result.getPaths() != null) {
+                if (result.getPaths().size() > 0) {
 
+                    final BusPath busPath = result.getPaths().get(0);
+                    if (busPath == null) {
+                        return;
+                    }
+                    RouteEvent event = new RouteEvent();
+                    event.setTag(1);
+                    event.setBusPath(busPath);
+                    event.setBusRouteResult(result);
+                    EventBus.getDefault().post(event);
+
+
+                } else if (result != null && result.getPaths() == null) {
+                    ToastUtils.showShort(R.string.no_result);
+                }
+            } else {
+                ToastUtils.showShort(R.string.no_result);
+            }
+        } else {
+            ToastUtils.showShort(errorCode);
+        }
     }
 
     @Override
@@ -286,40 +310,11 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
                         return;
                     }
                     RouteEvent event = new RouteEvent();
-                    event.setTag(1);
-                    event.setPath(drivePath);
+                    event.setTag(0);
+                    event.setDrivePath(drivePath);
                     event.setDriveRouteResult(mDriveRouteResult);
                     EventBus.getDefault().post(event);
 
-
-
-//                    DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
-//                            mContext, aMap, drivePath,
-//                            mDriveRouteResult.getStartPos(),
-//                            mDriveRouteResult.getTargetPos(), null);
-//                    drivingRouteOverlay.setNodeIconVisibility(true);//设置节点marker是否显示
-//                    drivingRouteOverlay.setIsColorfulline(true);//是否用颜色展示交通拥堵情况，默认true
-//                    drivingRouteOverlay.removeFromMap();
-//                    drivingRouteOverlay.addToMap();
-//                    drivingRouteOverlay.zoomToSpan();
-//
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//
-//                            if (changQueryTypeBtn != null) {
-//                                changQueryTypeBtn.setText(CHANGE_TO_BUS);
-//                            }
-//                            if (driveView != null) {
-//                                driveView.setVisibility(View.VISIBLE);
-//                                driveView.setPath(drivePath);
-//                            }
-//
-//                            if (busView != null) {
-//                                busView.setVisibility(View.GONE);
-//                            }
-//                        }
-//                    });
 
                 } else if (result != null && result.getPaths() == null) {
                     ToastUtils.showShort(R.string.no_result);
@@ -334,8 +329,32 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
     }
 
     @Override
-    public void onWalkRouteSearched(WalkRouteResult walkRouteResult, int i) {
+    public void onWalkRouteSearched(WalkRouteResult result, int errorCode) {
+        dissmissProgressDialog();
+        if (errorCode == AMapException.CODE_AMAP_SUCCESS) {
+            if (result != null && result.getPaths() != null) {
+                if (result.getPaths().size() > 0) {
 
+                    final WalkPath walkPath = result.getPaths().get(0);
+                    if (walkPath == null) {
+                        return;
+                    }
+                    RouteEvent event = new RouteEvent();
+                    event.setTag(2);
+                    event.setWalkPath(walkPath);
+                    event.setWalkRouteResult(result);
+                    EventBus.getDefault().post(event);
+
+
+                } else if (result != null && result.getPaths() == null) {
+                    ToastUtils.showShort(R.string.no_result);
+                }
+            } else {
+                ToastUtils.showShort(R.string.no_result);
+            }
+        } else {
+            ToastUtils.showShort(errorCode);
+        }
     }
 
     @Override

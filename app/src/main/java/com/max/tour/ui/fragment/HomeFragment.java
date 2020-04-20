@@ -27,7 +27,6 @@ import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.MyLocationStyle;
-import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.core.SuggestionCity;
 import com.amap.api.services.help.Tip;
@@ -37,11 +36,15 @@ import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
 import com.max.tour.R;
-import com.max.tour.bean.Sights;
+import com.max.tour.event.RouteEvent;
 import com.max.tour.event.SearchEvent;
 import com.max.tour.helper.DbHelper;
 import com.max.tour.ui.activity.SearchActivity;
 import com.max.tour.ui.activity.SightDetailsActivity;
+import com.max.tour.utils.map.BusRouteOverlay;
+import com.max.tour.utils.map.DrivingRouteOverlay;
+import com.max.tour.widget.BusView;
+import com.max.tour.widget.DriveView;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.greenrobot.eventbus.EventBus;
@@ -50,6 +53,8 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 /**
  * Copyright (C) 2019, Relx
@@ -75,6 +80,9 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     LinearLayout mLayoutSearch;
     TextView mTvKeywords;
     ImageView mIvClose;
+
+    DriveView mDriveView;
+    BusView mBusView;
 
     /**
      * 权限
@@ -109,7 +117,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     /**
      * POI搜索
      */
-    private PoiSearch poiSearch;//
+    private PoiSearch poiSearch;
     private Marker mPoiMarker;
 
     private String mCityCode;
@@ -149,6 +157,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                         LogUtils.i("已同意权限");
                         // 初始化MapView
                         initMap(savedInstanceState);
+                        initRoute();
                         initSearchLayout();
 
 
@@ -157,6 +166,13 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                     }
                 }
         );
+    }
+
+    private void initRoute() {
+
+        mDriveView = mView.findViewById(R.id.drive_view);
+        mBusView = mView.findViewById(R.id.bus_view);
+
     }
 
     private void initSearchLayout() {
@@ -481,5 +497,66 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
         }
         ToastUtils.showShort(infomation);
 
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRouteEvent(RouteEvent event) {
+        if (event != null) {
+            if (0 == event.getTag()) {
+                DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
+                        getActivity(), aMap, event.getDrivePath(),
+                        event.getDriveRouteResult().getStartPos(),
+                        event.getDriveRouteResult().getTargetPos(), null);
+                drivingRouteOverlay.setNodeIconVisibility(true);//设置节点marker是否显示
+                drivingRouteOverlay.setIsColorfulline(true);//是否用颜色展示交通拥堵情况，默认true
+                drivingRouteOverlay.removeFromMap();
+                drivingRouteOverlay.addToMap();
+                drivingRouteOverlay.zoomToSpan();
+
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+//                    if (changQueryTypeBtn != null) {
+//                        changQueryTypeBtn.setText(CHANGE_TO_BUS);
+//                    }
+                        if (mDriveView != null) {
+                            mDriveView.setVisibility(View.VISIBLE);
+                            mDriveView.setPath(event.getDrivePath());
+                        }
+
+                        if (mBusView != null) {
+                            mBusView.setVisibility(View.GONE);
+                        }
+                    }
+                });
+            } else if (1 == event.getTag()) {
+                BusRouteOverlay busrouteOverlay = new BusRouteOverlay(getActivity(), aMap,
+                        event.getBusRouteResult().getPaths().get(0), event.getBusRouteResult().getStartPos(),
+                        event.getBusRouteResult().getTargetPos());
+                busrouteOverlay.removeFromMap();
+                busrouteOverlay.addToMap();
+                busrouteOverlay.zoomToSpan();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (mBusView != null) {
+                            mBusView.setVisibility(View.VISIBLE);
+                            mBusView.setPath(event.getBusPath());
+                        }
+                        if (mDriveView != null) {
+                            mDriveView.setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+            } else if (2 == event.getTag()) {
+
+            }
+
+        }
     }
 }
