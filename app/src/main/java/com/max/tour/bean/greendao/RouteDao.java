@@ -25,15 +25,12 @@ public class RouteDao extends AbstractDao<Route, Long> {
      */
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
-        public final static Property RouteId = new Property(1, Integer.class, "routeId", false, "ROUTE_ID");
-        public final static Property RouteName = new Property(2, String.class, "routeName", false, "ROUTE_NAME");
-        public final static Property RouteLength = new Property(3, String.class, "routeLength", false, "ROUTE_LENGTH");
-        public final static Property Start = new Property(4, String.class, "Start", false, "START");
-        public final static Property RouteDay = new Property(5, Integer.class, "routeDay", false, "ROUTE_DAY");
-        public final static Property RoutePrice = new Property(6, Integer.class, "routePrice", false, "ROUTE_PRICE");
-        public final static Property RouteDetails = new Property(7, String.class, "routeDetails", false, "ROUTE_DETAILS");
-        public final static Property RouteAddtime = new Property(8, java.util.Date.class, "routeAddtime", false, "ROUTE_ADDTIME");
-        public final static Property Others = new Property(9, String.class, "others", false, "OTHERS");
+        public final static Property StartLocation = new Property(1, String.class, "startLocation", false, "START_LOCATION");
+        public final static Property EndLocation = new Property(2, String.class, "endLocation", false, "END_LOCATION");
+        public final static Property StartLongitude = new Property(3, Double.class, "startLongitude", false, "START_LONGITUDE");
+        public final static Property StartLatitude = new Property(4, Double.class, "startLatitude", false, "START_LATITUDE");
+        public final static Property EndLongitude = new Property(5, Double.class, "endLongitude", false, "END_LONGITUDE");
+        public final static Property EndLatitude = new Property(6, Double.class, "endLatitude", false, "END_LATITUDE");
     }
 
 
@@ -50,15 +47,12 @@ public class RouteDao extends AbstractDao<Route, Long> {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"ROUTE\" (" + //
                 "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
-                "\"ROUTE_ID\" INTEGER," + // 1: routeId
-                "\"ROUTE_NAME\" TEXT," + // 2: routeName
-                "\"ROUTE_LENGTH\" TEXT," + // 3: routeLength
-                "\"START\" TEXT," + // 4: Start
-                "\"ROUTE_DAY\" INTEGER," + // 5: routeDay
-                "\"ROUTE_PRICE\" INTEGER," + // 6: routePrice
-                "\"ROUTE_DETAILS\" TEXT," + // 7: routeDetails
-                "\"ROUTE_ADDTIME\" INTEGER," + // 8: routeAddtime
-                "\"OTHERS\" TEXT);"); // 9: others
+                "\"START_LOCATION\" TEXT," + // 1: startLocation
+                "\"END_LOCATION\" TEXT," + // 2: endLocation
+                "\"START_LONGITUDE\" REAL," + // 3: startLongitude
+                "\"START_LATITUDE\" REAL," + // 4: startLatitude
+                "\"END_LONGITUDE\" REAL," + // 5: endLongitude
+                "\"END_LATITUDE\" REAL);"); // 6: endLatitude
     }
 
     /** Drops the underlying database table. */
@@ -76,49 +70,34 @@ public class RouteDao extends AbstractDao<Route, Long> {
             stmt.bindLong(1, id);
         }
  
-        Integer routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(2, routeId);
+        String startLocation = entity.getStartLocation();
+        if (startLocation != null) {
+            stmt.bindString(2, startLocation);
         }
  
-        String routeName = entity.getRouteName();
-        if (routeName != null) {
-            stmt.bindString(3, routeName);
+        String endLocation = entity.getEndLocation();
+        if (endLocation != null) {
+            stmt.bindString(3, endLocation);
         }
  
-        String routeLength = entity.getRouteLength();
-        if (routeLength != null) {
-            stmt.bindString(4, routeLength);
+        Double startLongitude = entity.getStartLongitude();
+        if (startLongitude != null) {
+            stmt.bindDouble(4, startLongitude);
         }
  
-        String Start = entity.getStart();
-        if (Start != null) {
-            stmt.bindString(5, Start);
+        Double startLatitude = entity.getStartLatitude();
+        if (startLatitude != null) {
+            stmt.bindDouble(5, startLatitude);
         }
  
-        Integer routeDay = entity.getRouteDay();
-        if (routeDay != null) {
-            stmt.bindLong(6, routeDay);
+        Double endLongitude = entity.getEndLongitude();
+        if (endLongitude != null) {
+            stmt.bindDouble(6, endLongitude);
         }
  
-        Integer routePrice = entity.getRoutePrice();
-        if (routePrice != null) {
-            stmt.bindLong(7, routePrice);
-        }
- 
-        String routeDetails = entity.getRouteDetails();
-        if (routeDetails != null) {
-            stmt.bindString(8, routeDetails);
-        }
- 
-        java.util.Date routeAddtime = entity.getRouteAddtime();
-        if (routeAddtime != null) {
-            stmt.bindLong(9, routeAddtime.getTime());
-        }
- 
-        String others = entity.getOthers();
-        if (others != null) {
-            stmt.bindString(10, others);
+        Double endLatitude = entity.getEndLatitude();
+        if (endLatitude != null) {
+            stmt.bindDouble(7, endLatitude);
         }
     }
 
@@ -131,49 +110,34 @@ public class RouteDao extends AbstractDao<Route, Long> {
             stmt.bindLong(1, id);
         }
  
-        Integer routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(2, routeId);
+        String startLocation = entity.getStartLocation();
+        if (startLocation != null) {
+            stmt.bindString(2, startLocation);
         }
  
-        String routeName = entity.getRouteName();
-        if (routeName != null) {
-            stmt.bindString(3, routeName);
+        String endLocation = entity.getEndLocation();
+        if (endLocation != null) {
+            stmt.bindString(3, endLocation);
         }
  
-        String routeLength = entity.getRouteLength();
-        if (routeLength != null) {
-            stmt.bindString(4, routeLength);
+        Double startLongitude = entity.getStartLongitude();
+        if (startLongitude != null) {
+            stmt.bindDouble(4, startLongitude);
         }
  
-        String Start = entity.getStart();
-        if (Start != null) {
-            stmt.bindString(5, Start);
+        Double startLatitude = entity.getStartLatitude();
+        if (startLatitude != null) {
+            stmt.bindDouble(5, startLatitude);
         }
  
-        Integer routeDay = entity.getRouteDay();
-        if (routeDay != null) {
-            stmt.bindLong(6, routeDay);
+        Double endLongitude = entity.getEndLongitude();
+        if (endLongitude != null) {
+            stmt.bindDouble(6, endLongitude);
         }
  
-        Integer routePrice = entity.getRoutePrice();
-        if (routePrice != null) {
-            stmt.bindLong(7, routePrice);
-        }
- 
-        String routeDetails = entity.getRouteDetails();
-        if (routeDetails != null) {
-            stmt.bindString(8, routeDetails);
-        }
- 
-        java.util.Date routeAddtime = entity.getRouteAddtime();
-        if (routeAddtime != null) {
-            stmt.bindLong(9, routeAddtime.getTime());
-        }
- 
-        String others = entity.getOthers();
-        if (others != null) {
-            stmt.bindString(10, others);
+        Double endLatitude = entity.getEndLatitude();
+        if (endLatitude != null) {
+            stmt.bindDouble(7, endLatitude);
         }
     }
 
@@ -186,15 +150,12 @@ public class RouteDao extends AbstractDao<Route, Long> {
     public Route readEntity(Cursor cursor, int offset) {
         Route entity = new Route( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
-            cursor.isNull(offset + 1) ? null : cursor.getInt(offset + 1), // routeId
-            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // routeName
-            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // routeLength
-            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // Start
-            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // routeDay
-            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // routePrice
-            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7), // routeDetails
-            cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)), // routeAddtime
-            cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9) // others
+            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // startLocation
+            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // endLocation
+            cursor.isNull(offset + 3) ? null : cursor.getDouble(offset + 3), // startLongitude
+            cursor.isNull(offset + 4) ? null : cursor.getDouble(offset + 4), // startLatitude
+            cursor.isNull(offset + 5) ? null : cursor.getDouble(offset + 5), // endLongitude
+            cursor.isNull(offset + 6) ? null : cursor.getDouble(offset + 6) // endLatitude
         );
         return entity;
     }
@@ -202,15 +163,12 @@ public class RouteDao extends AbstractDao<Route, Long> {
     @Override
     public void readEntity(Cursor cursor, Route entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
-        entity.setRouteId(cursor.isNull(offset + 1) ? null : cursor.getInt(offset + 1));
-        entity.setRouteName(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
-        entity.setRouteLength(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setStart(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setRouteDay(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
-        entity.setRoutePrice(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
-        entity.setRouteDetails(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
-        entity.setRouteAddtime(cursor.isNull(offset + 8) ? null : new java.util.Date(cursor.getLong(offset + 8)));
-        entity.setOthers(cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9));
+        entity.setStartLocation(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
+        entity.setEndLocation(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
+        entity.setStartLongitude(cursor.isNull(offset + 3) ? null : cursor.getDouble(offset + 3));
+        entity.setStartLatitude(cursor.isNull(offset + 4) ? null : cursor.getDouble(offset + 4));
+        entity.setEndLongitude(cursor.isNull(offset + 5) ? null : cursor.getDouble(offset + 5));
+        entity.setEndLatitude(cursor.isNull(offset + 6) ? null : cursor.getDouble(offset + 6));
      }
     
     @Override

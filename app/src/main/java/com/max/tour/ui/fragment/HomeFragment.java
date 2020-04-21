@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
@@ -27,18 +28,26 @@ import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.MyLocationStyle;
+import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.core.SuggestionCity;
 import com.amap.api.services.help.Tip;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
+import com.amap.api.services.route.BusRouteResult;
+import com.amap.api.services.route.DriveRouteResult;
+import com.amap.api.services.route.WalkRouteResult;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
+import com.flyco.tablayout.CommonTabLayout;
+import com.flyco.tablayout.listener.CustomTabEntity;
+import com.flyco.tablayout.listener.OnTabSelectListener;
 import com.max.tour.R;
 import com.max.tour.event.RouteEvent;
 import com.max.tour.event.SearchEvent;
 import com.max.tour.helper.DbHelper;
+import com.max.tour.ui.activity.RouteActivity;
 import com.max.tour.ui.activity.SearchActivity;
 import com.max.tour.ui.activity.SightDetailsActivity;
 import com.max.tour.utils.map.BusRouteOverlay;
@@ -69,15 +78,31 @@ import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
  */
 public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListener, AMapLocationListener,
         AMap.OnMarkerClickListener, AMap.OnMapClickListener,
-        AMap.OnInfoWindowClickListener, AMap.OnCameraChangeListener {
+        AMap.OnInfoWindowClickListener, AMap.OnCameraChangeListener, View.OnClickListener {
 
     public static final String KEYWORDS = "风景名胜";
 
 
     private View mView;
     MapView mMapView = null;
-
+    // Search布局
     LinearLayout mLayoutSearch;
+
+
+    // 路线布局
+    LinearLayout mLayoutRoute;
+    RelativeLayout mLayoutBack;
+    LinearLayout mLayoutStart;
+    LinearLayout mLayoutEnd;
+    TextView mTvStartLocation;
+    TextView mTvEndLocation;
+    TextView mTvSearch;
+    CommonTabLayout mTabLayout;
+
+    private ArrayList<CustomTabEntity> mTabEntity = new ArrayList<>();
+    private String[] mTitles = {"驾车", "公交", "步行"};
+
+
     TextView mTvKeywords;
     ImageView mIvClose;
 
@@ -122,6 +147,17 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
     private String mCityCode;
     private String mCityName;
+
+    DriveRouteResult driveRouteResult;
+    BusRouteResult busRouteResult;
+    WalkRouteResult walkRouteResult;
+
+    private LatLonPoint mStartPoint;
+    private LatLonPoint mEndPoint;
+
+    private String mStartStr;
+
+    private String mEndStr;
 
 
     public static HomeFragment newInstance() {
@@ -170,7 +206,61 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
     private void initRoute() {
 
+        mLayoutRoute = mView.findViewById(R.id.layout_route);
+        mLayoutBack = mView.findViewById(R.id.layout_back);
+        mLayoutStart = mView.findViewById(R.id.layout_start);
+        mLayoutEnd = mView.findViewById(R.id.layout_end);
+        mTvSearch = mView.findViewById(R.id.tv_search);
+        mTvSearch.setVisibility(View.GONE);
+        mLayoutBack.setOnClickListener(this);
+        mLayoutStart.setOnClickListener(this);
+        mLayoutEnd.setOnClickListener(this);
+        mTvStartLocation = mView.findViewById(R.id.input_location_start);
+        mTvEndLocation = mView.findViewById(R.id.input_location_end);
+        mTabLayout = mView.findViewById(R.id.tabLayout);
+        mTabLayout.setVisibility(View.GONE);
+        for (String mTitle : mTitles) {
+            mTabEntity.add(new CustomTabEntity() {
+                @Override
+                public String getTabTitle() {
+                    return mTitle;
+                }
+
+                @Override
+                public int getTabSelectedIcon() {
+                    return 0;
+                }
+
+                @Override
+                public int getTabUnselectedIcon() {
+                    return 0;
+                }
+            });
+        }
+        mTabLayout.setTabData(mTabEntity);
+        mTabLayout.setOnTabSelectListener(new OnTabSelectListener() {
+            @Override
+            public void onTabSelect(int position) {
+            }
+
+            @Override
+            public void onTabReselect(int position) {
+
+            }
+        });
+        mTabLayout.setCurrentTab(0);
+
         mDriveView = mView.findViewById(R.id.drive_view);
+        mDriveView.setListener(new DriveView.ItemClickListener() {
+            @Override
+            public void onItem(int tag) {
+                if (3 == tag) {
+                    // 跳转到高德地图 开始导航
+                } else {
+                    showDriverRoute(tag, driveRouteResult != null ? driveRouteResult.getPaths().size() : 1);
+                }
+            }
+        });
         mBusView = mView.findViewById(R.id.bus_view);
 
     }
@@ -214,6 +304,17 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             aMap = mMapView.getMap();
             //初始化定位蓝点样式类myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
             //连续定位、且将视角移动到地图中心点，定位点依照设备方向旋转，并且会跟随设备移动。
+
+            //声明AMapLocationClient类对象
+            mLocationClient = new AMapLocationClient(getActivity());
+            mLocationClient.setLocationListener(this);
+            mLocationOptions = new AMapLocationClientOption();
+            //设置定位场景，目前支持三种场景（签到、出行、运动，默认无场景）
+            mLocationOptions.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.SignIn);
+            mLocationClient.setLocationOption(mLocationOptions);
+            //设置场景模式后最好调用一次stop，再调用start以保证场景模式生效
+            mLocationClient.stopLocation();
+            mLocationClient.startLocation();
             mLocationStyle = new MyLocationStyle();
             //设置连续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效。单位为毫秒。
             mLocationStyle.interval(2000);
@@ -223,7 +324,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             //设置默认定位按钮是否显示，非必需设置。
             aMap.getUiSettings().setMyLocationButtonEnabled(true);
             aMap.setMyLocationEnabled(true);
-
             aMap.setOnMapClickListener(this);
             aMap.setOnInfoWindowClickListener(this);
             aMap.setOnMarkerClickListener(this);
@@ -245,17 +345,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                 }
             });
 
-            //声明AMapLocationClient类对象
-            mLocationClient = new AMapLocationClient(getActivity());
-            mLocationClient.setLocationListener(this);
-            mLocationOptions = new AMapLocationClientOption();
-            //设置定位场景，目前支持三种场景（签到、出行、运动，默认无场景）
-            mLocationOptions.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.SignIn);
-            mLocationClient.setLocationOption(mLocationOptions);
-            //设置场景模式后最好调用一次stop，再调用start以保证场景模式生效
-            mLocationClient.stopLocation();
-            mLocationClient.startLocation();
-
 
         }
     }
@@ -273,7 +362,10 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     @Override
     public void onResume() {
         super.onResume();
-        mMapView.onResume();
+        if (mMapView != null) {
+            mMapView.onResume();
+        }
+
     }
 
     @Override
@@ -313,7 +405,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                     }
 
                 }
-
             }
         }
 
@@ -335,7 +426,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
         }
         LatLng latLng = new LatLng(pois.get(0).getLatLonPoint().getLatitude(), pois.get(0).getLatLonPoint().getLongitude());
-        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
 
 
     }
@@ -373,7 +464,6 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     public void onLocationChanged(AMapLocation aMapLocation) {
         // 设置地图比例
         LatLng latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
-//        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
         //初始化位置信息的所有景点信息
         mCityCode = aMapLocation.getCityCode();
         mCityName = aMapLocation.getCity();
@@ -503,34 +593,15 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     public void onRouteEvent(RouteEvent event) {
         if (event != null) {
             if (0 == event.getTag()) {
-                DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
-                        getActivity(), aMap, event.getDrivePath(),
-                        event.getDriveRouteResult().getStartPos(),
-                        event.getDriveRouteResult().getTargetPos(), null);
-                drivingRouteOverlay.setNodeIconVisibility(true);//设置节点marker是否显示
-                drivingRouteOverlay.setIsColorfulline(true);//是否用颜色展示交通拥堵情况，默认true
-                drivingRouteOverlay.removeFromMap();
-                drivingRouteOverlay.addToMap();
-                drivingRouteOverlay.zoomToSpan();
+                // 展示驾车路线
+                driveRouteResult = event.getDriveRouteResult();
+                mStartPoint = event.getStartPoint();
+                mEndPoint = event.getEndPoint();
+                mStartStr = event.getStartStr();
+                mEndStr = event.getEndStr();
 
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-//                    if (changQueryTypeBtn != null) {
-//                        changQueryTypeBtn.setText(CHANGE_TO_BUS);
-//                    }
-                        if (mDriveView != null) {
-                            mDriveView.setVisibility(View.VISIBLE);
-                            mDriveView.setPath(event.getDrivePath());
-                        }
-
-                        if (mBusView != null) {
-                            mBusView.setVisibility(View.GONE);
-                        }
-                    }
-                });
+                showDriverRoute(0, driveRouteResult.getPaths().size());
             } else if (1 == event.getTag()) {
                 BusRouteOverlay busrouteOverlay = new BusRouteOverlay(getActivity(), aMap,
                         event.getBusRouteResult().getPaths().get(0), event.getBusRouteResult().getStartPos(),
@@ -543,9 +614,13 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
                     @Override
                     public void run() {
 
+                        // 隐藏search
+                        mLayoutSearch.setVisibility(View.GONE);
+                        mLayoutRoute.setVisibility(View.VISIBLE);
+
                         if (mBusView != null) {
                             mBusView.setVisibility(View.VISIBLE);
-                            mBusView.setPath(event.getBusPath());
+                            mBusView.setPath(event.getBusRouteResult().getPaths().get(0));
                         }
                         if (mDriveView != null) {
                             mDriveView.setVisibility(View.GONE);
@@ -558,5 +633,102 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             }
 
         }
+    }
+
+    /**
+     * 展示第几条路线
+     *
+     * @param routeTag
+     */
+    private void showDriverRoute(int routeTag, int routeSize) {
+        if (driveRouteResult != null) {
+            aMap.clear();
+            for (int i = 0; i < driveRouteResult.getPaths().size(); i++) {
+                DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
+                        getActivity(), aMap, driveRouteResult.getPaths().get(i),
+                        driveRouteResult.getStartPos(),
+                        driveRouteResult.getTargetPos(), null);
+                if (i == routeTag) {
+                    //是否用颜色展示交通拥堵情况，默认true
+                    drivingRouteOverlay.setIsColorfulline(true);
+                    //设置节点marker是否显示
+                    drivingRouteOverlay.setNodeIconVisibility(true);
+                } else {
+                    drivingRouteOverlay.setIsColorfulline(false);
+                    drivingRouteOverlay.setNodeIconVisibility(false);
+                }
+                drivingRouteOverlay.removeFromMap();
+                drivingRouteOverlay.addToMap();
+                drivingRouteOverlay.zoomToSpan();
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    // 隐藏search
+                    mLayoutSearch.setVisibility(View.GONE);
+                    mLayoutRoute.setVisibility(View.VISIBLE);
+
+
+                    if (mDriveView != null) {
+                        mDriveView.setVisibility(View.VISIBLE);
+                        mDriveView.setRouteSize(routeSize);
+                        mDriveView.setPaths(driveRouteResult.getPaths());
+                    }
+
+                    if (mBusView != null) {
+                        mBusView.setVisibility(View.GONE);
+                    }
+                }
+            });
+        } else {
+            ToastUtils.showShort("请重新搜索路线");
+        }
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.layout_back:
+                // 隐藏search
+                refreshView();
+                break;
+            case R.id.layout_start:
+            case R.id.layout_end:
+                refreshView();
+                Intent intent = new Intent(getActivity(), RouteActivity.class);
+                getActivity().startActivity(intent);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * 刷新首页View
+     */
+    private void refreshView() {
+        mLayoutSearch.setVisibility(View.VISIBLE);
+        mLayoutRoute.setVisibility(View.GONE);
+        mTvStartLocation.setText("");
+        mTvEndLocation.setText("");
+        mTabLayout.setCurrentTab(0);
+
+        mStartPoint = null;
+        mEndPoint = null;
+        mStartStr = "";
+        mEndStr = "";
+
+        mDriveView.setVisibility(View.GONE);
+        mDriveView.clear();
+
+        mBusView.setVisibility(View.GONE);
+
+        aMap.clear();
+
+        doSearchQuery(KEYWORDS, mCityCode);
+
+
     }
 }

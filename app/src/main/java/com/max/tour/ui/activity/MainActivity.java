@@ -2,6 +2,7 @@ package com.max.tour.ui.activity;
 
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -92,7 +93,13 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
         mTabLayout.setOnTabSelectListener(new OnTabSelectListener() {
             @Override
             public void onTabSelect(int position) {
-                mViewPager.setCurrentItem(position);
+
+                if (2 == position) {
+                    Intent intent = new Intent(MainActivity.this, RouteActivity.class);
+                    startActivity(intent);
+                } else {
+                    mViewPager.setCurrentItem(position);
+                }
             }
 
             @Override

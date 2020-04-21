@@ -1,11 +1,14 @@
 package com.max.tour.event;
 
+import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
+
+import java.util.List;
 
 /**
  * Copyright (C) 2019, Relx
@@ -25,16 +28,20 @@ public class RouteEvent {
      */
     private int tag;
 
-    private DrivePath drivePath;
-    private BusPath busPath;
-    private WalkPath walkPath;
-
 
     private DriveRouteResult driveRouteResult;
 
     private WalkRouteResult walkRouteResult;
 
     private BusRouteResult busRouteResult;
+
+    private LatLonPoint startPoint ;
+    private LatLonPoint endPoint;
+
+    private String startStr;
+
+    private String endStr;
+
 
 
     public int getTag() {
@@ -45,29 +52,6 @@ public class RouteEvent {
         this.tag = tag;
     }
 
-    public DrivePath getDrivePath() {
-        return drivePath;
-    }
-
-    public void setDrivePath(DrivePath drivePath) {
-        this.drivePath = drivePath;
-    }
-
-    public BusPath getBusPath() {
-        return busPath;
-    }
-
-    public void setBusPath(BusPath busPath) {
-        this.busPath = busPath;
-    }
-
-    public WalkPath getWalkPath() {
-        return walkPath;
-    }
-
-    public void setWalkPath(WalkPath walkPath) {
-        this.walkPath = walkPath;
-    }
 
     public DriveRouteResult getDriveRouteResult() {
         return driveRouteResult;
@@ -91,5 +75,38 @@ public class RouteEvent {
 
     public void setBusRouteResult(BusRouteResult busRouteResult) {
         this.busRouteResult = busRouteResult;
+    }
+
+
+    public LatLonPoint getStartPoint() {
+        return startPoint;
+    }
+
+    public void setStartPoint(LatLonPoint startPoint) {
+        this.startPoint = startPoint;
+    }
+
+    public LatLonPoint getEndPoint() {
+        return endPoint;
+    }
+
+    public void setEndPoint(LatLonPoint endPoint) {
+        this.endPoint = endPoint;
+    }
+
+    public String getStartStr() {
+        return startStr;
+    }
+
+    public void setStartStr(String startStr) {
+        this.startStr = startStr;
+    }
+
+    public String getEndStr() {
+        return endStr;
+    }
+
+    public void setEndStr(String endStr) {
+        this.endStr = endStr;
     }
 }

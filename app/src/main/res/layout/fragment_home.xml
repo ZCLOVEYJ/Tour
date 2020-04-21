@@ -48,10 +48,18 @@
             android:layout_height="24dp"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
-            android:src="@mipmap/ico_go_black" />
+            android:src="@mipmap/ico_close_fork"
+            android:visibility="gone" />
 
 
     </LinearLayout>
+
+
+    <include
+        android:id="@+id/layout_route"
+        layout="@layout/layout_route"
+        android:visibility="gone"
+        />
 
 
     <com.max.tour.widget.DriveView

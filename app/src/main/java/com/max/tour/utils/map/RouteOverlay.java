@@ -220,7 +220,7 @@ public class RouteOverlay {
     }
 
     protected int getWalkColor() {
-        return Color.parseColor("#6db74d");
+        return Color.parseColor("#ff6db74d");
     }
 
     /**
@@ -230,11 +230,11 @@ public class RouteOverlay {
      * @since V2.2.1
      */
     protected int getBusColor() {
-        return Color.parseColor("#537edc");
+        return Color.parseColor("#ff537edc");
     }
 
     protected int getDriveColor() {
-        return Color.parseColor("#537edc");
+        return Color.parseColor("#ff537edc");
     }
 
     // protected int getShowRouteZoom() {

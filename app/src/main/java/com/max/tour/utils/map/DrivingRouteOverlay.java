@@ -31,7 +31,7 @@ import java.util.List;
  * <p>
  * Ver 2.2, 2020-04-19, ZhengChen, Create file
  */
-public class DrivingRouteOverlay extends RouteOverlay{
+public class DrivingRouteOverlay extends RouteOverlay {
 
     private DrivePath drivePath;
     private List<LatLonPoint> throughPointList;
@@ -52,9 +52,9 @@ public class DrivingRouteOverlay extends RouteOverlay{
     /**
      * 根据给定的参数，构造一个导航路线图层类对象。
      *
-     * @param amap      地图对象。
-     * @param path 导航路线规划方案。
-     * @param context   当前的activity对象。
+     * @param amap    地图对象。
+     * @param path    导航路线规划方案。
+     * @param context 当前的activity对象。
      */
     public DrivingRouteOverlay(Context context, AMap amap, DrivePath path,
                                LatLonPoint start, LatLonPoint end, List<LatLonPoint> throughPointList) {
@@ -117,10 +117,10 @@ public class DrivingRouteOverlay extends RouteOverlay{
             }
             addStartAndEndMarker();
             addThroughPointMarker();
-            if (isColorfulline && tmcs.size()>0 ) {
+            if (isColorfulline && tmcs.size() > 0) {
                 colorWayUpdate(tmcs);
                 showcolorPolyline();
-            }else {
+            } else {
                 showPolyline();
             }
 
@@ -137,7 +137,7 @@ public class DrivingRouteOverlay extends RouteOverlay{
         mPolylineOptions = null;
 
         mPolylineOptions = new PolylineOptions();
-        mPolylineOptions.color(getDriveColor()).width(getRouteWidth());
+        mPolylineOptions.color(Color.parseColor("#60537edc")).width(getRouteWidth());
     }
 
     private void showPolyline() {
@@ -164,7 +164,7 @@ public class DrivingRouteOverlay extends RouteOverlay{
         TMC segmentTrafficStatus;
         mPolylineOptionscolor = null;
         mPolylineOptionscolor = new PolylineOptions();
-        mPolylineOptionscolor.width(getRouteWidth());
+        mPolylineOptionscolor.color(Color.parseColor("#537edc")).width(getRouteWidth());
         List<Integer> colorList = new ArrayList<Integer>();
         mPolylineOptionscolor.add(AMapUtil.convertToLatLng(tmcSection.get(0).getPolyline().get(0)));
         colorList.add(getDriveColor());
@@ -178,7 +178,7 @@ public class DrivingRouteOverlay extends RouteOverlay{
             }
         }
         colorList.add(getDriveColor());
-//TODO        mPolylineOptionscolor.colorValues(colorList);
+//        mPolylineOptionscolor.colorValues(colorList);
     }
 
     private int getcolor(String status) {
@@ -190,14 +190,14 @@ public class DrivingRouteOverlay extends RouteOverlay{
         } else if (status.equals("拥堵")) {
             return Color.RED;
         } else if (status.equals("严重拥堵")) {
-            return Color.parseColor("#990033");
+            return Color.parseColor("#ff990033");
         } else {
-            return Color.parseColor("#537edc");
+            return Color.parseColor("#ff537edc");
         }
     }
 
     public LatLng convertToLatLng(LatLonPoint point) {
-        return new LatLng(point.getLatitude(),point.getLongitude());
+        return new LatLng(point.getLatitude(), point.getLongitude());
     }
 
     /**
@@ -312,6 +312,7 @@ public class DrivingRouteOverlay extends RouteOverlay{
         double preResult = dis / lSegLength;
         return new LatLng((ePt.latitude - sPt.latitude) * preResult + sPt.latitude, (ePt.longitude - sPt.longitude) * preResult + sPt.longitude);
     }
+
     /**
      * 去掉DriveLineOverlay上的线段和标记。
      */
@@ -330,4 +331,6 @@ public class DrivingRouteOverlay extends RouteOverlay{
             e.printStackTrace();
         }
     }
+
+
 }

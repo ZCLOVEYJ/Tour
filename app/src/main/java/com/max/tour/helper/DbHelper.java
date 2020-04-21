@@ -9,12 +9,14 @@ import com.max.tour.bean.Admin;
 import com.max.tour.bean.Comment;
 import com.max.tour.bean.Picture;
 import com.max.tour.bean.Rate;
+import com.max.tour.bean.Route;
 import com.max.tour.bean.Sights;
 import com.max.tour.bean.User;
 import com.max.tour.bean.greendao.AdminDao;
 import com.max.tour.bean.greendao.CommentDao;
 import com.max.tour.bean.greendao.DaoSession;
 import com.max.tour.bean.greendao.RateDao;
+import com.max.tour.bean.greendao.RouteDao;
 import com.max.tour.bean.greendao.SightsDao;
 import com.max.tour.bean.greendao.UserDao;
 import com.max.tour.constants.Constant;
@@ -346,4 +348,46 @@ public class DbHelper {
         rate.setRatingtime(new Date());
         return daoSession.insert(rate) > 0;
     }
+
+    public static boolean insertRoute(String toString, String toString1, double latitude, double longitude, double latitude1, double longitude1) {
+
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+
+        Route route = queryRoute(toString, toString1, latitude, longitude, latitude1, longitude1);
+        if (route != null) {
+            return true;
+        }
+        route = new Route();
+        route.setStartLocation(toString);
+        route.setEndLocation(toString1);
+        route.setStartLatitude(latitude);
+        route.setStartLongitude(longitude);
+        route.setEndLatitude(latitude1);
+        route.setEndLongitude(longitude1);
+
+        return daoSession.insert(route) > 0;
+
+    }
+
+    public static Route queryRoute(String toString, String toString1, double latitude, double longitude, double latitude1, double longitude1) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+
+        QueryBuilder<Route> qb = daoSession.queryBuilder(Route.class);
+        qb.where(RouteDao.Properties.StartLatitude.eq(latitude)).where(RouteDao.Properties.StartLongitude.eq(longitude))
+                .where(RouteDao.Properties.EndLatitude.eq(latitude1)).where(RouteDao.Properties.EndLongitude.eq(longitude1));
+        List<Route> list = qb.list();
+        if (list.size() > 0) {
+            Route route = list.get(0);
+            return route;
+        }
+        return null;
+    }
+
+    public static List<Route> queryRoute() {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Route> qb = daoSession.queryBuilder(Route.class);
+        return qb.list();
+    }
+
 }

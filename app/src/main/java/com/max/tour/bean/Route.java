@@ -1,11 +1,10 @@
 package com.max.tour.bean;
 
 import org.greenrobot.greendao.annotation.Entity;
+import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
 
 import java.io.Serializable;
-import java.util.Date;
-import org.greenrobot.greendao.annotation.Generated;
 
 /**
  * Copyright (C) 2019, Relx
@@ -26,29 +25,24 @@ public class Route implements Serializable {
     @Id(autoincrement = true)
     private Long id;
 
-    private Integer routeId;
-    private String routeName;
-    private String routeLength;
-    private String Start;
-    private Integer routeDay;
-    private Integer routePrice;
-    private String routeDetails;
-    private Date routeAddtime;
-    private String others;
-    @Generated(hash = 558307425)
-    public Route(Long id, Integer routeId, String routeName, String routeLength,
-            String Start, Integer routeDay, Integer routePrice, String routeDetails,
-            Date routeAddtime, String others) {
+    private String startLocation;
+    private String endLocation;
+    private Double startLongitude;
+    private Double startLatitude;
+
+    private Double endLongitude;
+    private Double endLatitude;
+    @Generated(hash = 726973792)
+    public Route(Long id, String startLocation, String endLocation,
+            Double startLongitude, Double startLatitude, Double endLongitude,
+            Double endLatitude) {
         this.id = id;
-        this.routeId = routeId;
-        this.routeName = routeName;
-        this.routeLength = routeLength;
-        this.Start = Start;
-        this.routeDay = routeDay;
-        this.routePrice = routePrice;
-        this.routeDetails = routeDetails;
-        this.routeAddtime = routeAddtime;
-        this.others = others;
+        this.startLocation = startLocation;
+        this.endLocation = endLocation;
+        this.startLongitude = startLongitude;
+        this.startLatitude = startLatitude;
+        this.endLongitude = endLongitude;
+        this.endLatitude = endLatitude;
     }
     @Generated(hash = 467763370)
     public Route() {
@@ -59,60 +53,44 @@ public class Route implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
-    public Integer getRouteId() {
-        return this.routeId;
+    public String getStartLocation() {
+        return this.startLocation;
     }
-    public void setRouteId(Integer routeId) {
-        this.routeId = routeId;
+    public void setStartLocation(String startLocation) {
+        this.startLocation = startLocation;
     }
-    public String getRouteName() {
-        return this.routeName;
+    public String getEndLocation() {
+        return this.endLocation;
     }
-    public void setRouteName(String routeName) {
-        this.routeName = routeName;
+    public void setEndLocation(String endLocation) {
+        this.endLocation = endLocation;
     }
-    public String getRouteLength() {
-        return this.routeLength;
+    public Double getStartLongitude() {
+        return this.startLongitude;
     }
-    public void setRouteLength(String routeLength) {
-        this.routeLength = routeLength;
+    public void setStartLongitude(Double startLongitude) {
+        this.startLongitude = startLongitude;
     }
-    public String getStart() {
-        return this.Start;
+    public Double getStartLatitude() {
+        return this.startLatitude;
     }
-    public void setStart(String Start) {
-        this.Start = Start;
+    public void setStartLatitude(Double startLatitude) {
+        this.startLatitude = startLatitude;
     }
-    public Integer getRouteDay() {
-        return this.routeDay;
+    public Double getEndLongitude() {
+        return this.endLongitude;
     }
-    public void setRouteDay(Integer routeDay) {
-        this.routeDay = routeDay;
+    public void setEndLongitude(Double endLongitude) {
+        this.endLongitude = endLongitude;
     }
-    public Integer getRoutePrice() {
-        return this.routePrice;
+    public Double getEndLatitude() {
+        return this.endLatitude;
     }
-    public void setRoutePrice(Integer routePrice) {
-        this.routePrice = routePrice;
+    public void setEndLatitude(Double endLatitude) {
+        this.endLatitude = endLatitude;
     }
-    public String getRouteDetails() {
-        return this.routeDetails;
-    }
-    public void setRouteDetails(String routeDetails) {
-        this.routeDetails = routeDetails;
-    }
-    public Date getRouteAddtime() {
-        return this.routeAddtime;
-    }
-    public void setRouteAddtime(Date routeAddtime) {
-        this.routeAddtime = routeAddtime;
-    }
-    public String getOthers() {
-        return this.others;
-    }
-    public void setOthers(String others) {
-        this.others = others;
-    }
+
+
 
 
 }

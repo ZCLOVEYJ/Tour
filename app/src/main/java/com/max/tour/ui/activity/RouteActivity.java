@@ -1,38 +1,40 @@
-package com.max.tour.ui.fragment;
-
+package com.max.tour.ui.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.BusRouteResult;
-import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.RideRouteResult;
 import com.amap.api.services.route.RouteSearch;
 import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
 import com.blankj.utilcode.util.ToastUtils;
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.flyco.tablayout.CommonTabLayout;
 import com.flyco.tablayout.listener.CustomTabEntity;
 import com.flyco.tablayout.listener.OnTabSelectListener;
 import com.max.tour.R;
-import com.max.tour.common.MyFragment;
+import com.max.tour.bean.Route;
+import com.max.tour.common.MyActivity;
 import com.max.tour.event.RouteEvent;
 import com.max.tour.event.SearchEvent;
-import com.max.tour.ui.activity.MainActivity;
-import com.max.tour.ui.activity.SearchActivity;
+import com.max.tour.helper.DataUtils;
+import com.max.tour.helper.DbHelper;
+import com.max.tour.http.model.HttpData;
+import com.max.tour.ui.adapter.BusRouteAdapter;
 import com.max.tour.ui.adapter.RouteAdpter;
 
 import org.greenrobot.eventbus.EventBus;
@@ -40,23 +42,23 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
-/**
- * Copyright (C) 2019, Relx
- * RouteFragment
- * <p>
- * Description
- *
- * @author ZhengChen
- * @version 2.2
- * <p>
- * Ver 2.2, 2020-04-14, ZhengChen, Create file
- */
-public class RouteFragment extends MyFragment<MainActivity> implements RouteSearch.OnRouteSearchListener {
 
+public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSearchListener, BaseQuickAdapter.OnItemClickListener {
+
+    @BindView(R.id.layout_back)
+    RelativeLayout mLayoutBack;
     @BindView(R.id.input_location_start)
     TextView mInputLocationStart;
     @BindView(R.id.layout_start)
@@ -69,6 +71,8 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
     LinearLayout mLayoutEnd;
     @BindView(R.id.tabLayout)
     CommonTabLayout mTabLayout;
+    @BindView(R.id.bus_recyclerView)
+    RecyclerView mBusRecyclerView;
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
@@ -76,8 +80,15 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
     private String[] mTitles = {"驾车", "公交", "步行"};
 
     LinearLayoutManager mLayoutManager;
+    LinearLayoutManager mBusLayoutManager;
+    List<Route> mList;
     RouteAdpter mAdapter;
     private ProgressDialog progDialog = null;
+
+
+    List<BusPath> mBusList;
+    BusRouteAdapter mBusAdapter;
+
 
     private LatLonPoint startPoint = new LatLonPoint(39.903588, 116.47357);
     private LatLonPoint endPoint = new LatLonPoint(39.993253, 116.473195);
@@ -89,15 +100,19 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
     private String currentCityName = "北京";
 
     private DriveRouteResult mDriveRouteResult;
+    private BusRouteResult mBusRouteResult;
+    private WalkRouteResult mWalkRouteResult;
 
-
-    public static RouteFragment newInstance() {
-        return new RouteFragment();
-    }
 
     @Override
     protected int getLayoutId() {
         return R.layout.fragment_route;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -137,23 +152,86 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
         mRouteSearch = new RouteSearch(getActivity());
         mRouteSearch.setRouteSearchListener(this);
 
+        mList = new ArrayList<>();
+        mAdapter = new RouteAdpter(mList);
+        mAdapter.setOnItemClickListener(this);
+        mLayoutManager = new LinearLayoutManager(this);
+
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setAdapter(mAdapter);
+
+        mBusList = new ArrayList<>();
+        mBusAdapter = new BusRouteAdapter(mBusList);
+        mBusAdapter.setOnItemClickListener(this);
+        mBusLayoutManager = new LinearLayoutManager(this);
+        mBusRecyclerView.setLayoutManager(mBusLayoutManager);
+        mBusRecyclerView.setAdapter(mBusAdapter);
+
+
     }
 
     @Override
     protected void initData() {
 
+        queryRoutes();
+
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EventBus.getDefault().register(this);
+    private void queryRoutes() {
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<List<Route>>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<List<Route>>> emitter) throws Exception {
+
+                        List<Route> list = DbHelper.queryRoute();
+                        emitter.onNext(DataUtils.getInstance().getData(200, "", list));
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<List<Route>>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<List<Route>> data) {
+                        if (data.getData() != null) {
+                            mList.clear();
+                            mList.addAll(data.getData());
+                            mAdapter.setNewData(mList);
+
+
+                        } else {
+                            ToastUtils.showShort("查询失败，请联系管理员");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
     }
 
-    @OnClick({R.id.layout_start, R.id.layout_end, R.id.tv_search})
+    @OnClick({R.id.layout_back, R.id.layout_start, R.id.layout_end, R.id.tv_search})
     public void onViewClicked(View view) {
         Intent intent;
         switch (view.getId()) {
+            case R.id.layout_back:
+                RouteEvent event = new RouteEvent();
+                EventBus.getDefault().post(event);
+                finish();
+                break;
 
             case R.id.layout_start:
                 intent = new Intent(getActivity(), SearchActivity.class);
@@ -172,13 +250,57 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
                     ToastUtils.showShort("请输入出发点和终点");
                     return;
                 }
-                // 查询路线
-                searchRoute(routeType);
+                saveRoute();
+
 
                 break;
             default:
                 break;
         }
+    }
+
+    private void saveRoute() {
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<Boolean>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<Boolean>> emitter) throws Exception {
+
+                        boolean result = DbHelper.insertRoute(mInputLocationStart.getText().toString(), mInputLocationEnd.getText().toString(),
+                                startPoint.getLatitude(), startPoint.getLongitude(), endPoint.getLatitude(), endPoint.getLongitude());
+                        emitter.onNext(DataUtils.getInstance().getData(200, "", result));
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<Boolean>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<Boolean> data) {
+                        if (data.getData()) {
+                            // 查询路线
+                            searchRoute(routeType);
+                        } else {
+                            ToastUtils.showShort("存储失败，请联系管理员");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
     }
 
     private void searchRoute(int routeType) {
@@ -196,7 +318,7 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
         if (routeType == 0) {
             // 驾车路径规划
             // 第一个参数表示路径规划的起点和终点，第二个参数表示驾车模式，第三个参数表示途经点，第四个参数表示避让区域，第五个参数表示避让道路
-            RouteSearch.DriveRouteQuery query = new RouteSearch.DriveRouteQuery(fromAndTo, RouteSearch.DRIVEING_PLAN_DEFAULT, null,
+            RouteSearch.DriveRouteQuery query = new RouteSearch.DriveRouteQuery(fromAndTo, RouteSearch.DRIVING_MULTI_STRATEGY_FASTEST_SHORTEST_AVOID_CONGESTION, null,
                     null, "");
             // 异步路径规划驾车模式查询
             mRouteSearch.calculateDriveRouteAsyn(query);
@@ -275,14 +397,14 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
             if (result != null && result.getPaths() != null) {
                 if (result.getPaths().size() > 0) {
 
-                    final BusPath busPath = result.getPaths().get(0);
-                    if (busPath == null) {
-                        return;
-                    }
-                    RouteEvent event = new RouteEvent();
-                    event.setTag(1);
-                    event.setBusRouteResult(result);
-                    EventBus.getDefault().post(event);
+                    mBusList.clear();
+                    mBusList.addAll(result.getPaths());
+                    mBusAdapter.setNewData(mBusList);
+
+                    mRecyclerView.setVisibility(View.GONE);
+                    mBusRecyclerView.setVisibility(View.VISIBLE);
+
+                    mBusRouteResult = result;
 
 
                 } else if (result != null && result.getPaths() == null) {
@@ -303,21 +425,14 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
             if (result != null && result.getPaths() != null) {
                 if (result.getPaths().size() > 0) {
                     mDriveRouteResult = result;
-                    final DrivePath drivePath = mDriveRouteResult.getPaths()
-                            .get(0);
-                    if (drivePath == null) {
-                        return;
-                    }
                     RouteEvent event = new RouteEvent();
                     event.setTag(0);
                     event.setDriveRouteResult(mDriveRouteResult);
                     EventBus.getDefault().post(event);
-
-
-                } else if (result != null && result.getPaths() == null) {
+                    finish();
+                } else {
                     ToastUtils.showShort(R.string.no_result);
                 }
-
             } else {
                 ToastUtils.showShort(R.string.no_result);
             }
@@ -341,6 +456,7 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
                     event.setTag(2);
                     event.setWalkRouteResult(result);
                     EventBus.getDefault().post(event);
+                    finish();
 
 
                 } else if (result != null && result.getPaths() == null) {
@@ -356,6 +472,38 @@ public class RouteFragment extends MyFragment<MainActivity> implements RouteSear
 
     @Override
     public void onRideRouteSearched(RideRouteResult rideRouteResult, int i) {
+
+    }
+
+    @Override
+    public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+
+        if (adapter instanceof RouteAdpter) {
+            Route route = mList.get(position);
+            startPoint.setLatitude(route.getStartLatitude());
+            startPoint.setLongitude(route.getStartLongitude());
+            endPoint.setLatitude(route.getEndLatitude());
+            endPoint.setLongitude(route.getEndLongitude());
+
+            // 查询路线
+            searchRoute(routeType);
+        } else {
+            RouteEvent event = new RouteEvent();
+            event.setTag(1);
+            event.setBusRouteResult(mBusRouteResult);
+            EventBus.getDefault().post(event);
+            finish();
+
+        }
+
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        RouteEvent event = new RouteEvent();
+        EventBus.getDefault().post(event);
+        super.onBackPressed();
 
     }
 }
