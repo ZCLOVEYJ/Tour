@@ -11,12 +11,15 @@ import com.hjq.bar.TitleBar;
 import com.max.tour.R;
 import com.max.tour.bean.Rate;
 import com.max.tour.common.MyActivity;
+import com.max.tour.event.RatingEvent;
 import com.max.tour.helper.DataUtils;
 import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
 import com.max.tour.ui.adapter.RatingAdapter;
 import com.willy.ratingbar.BaseRatingBar;
 import com.willy.ratingbar.ScaleRatingBar;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -250,6 +253,12 @@ public class RatingActivity extends MyActivity {
                             // 获取评分列表
                             querySightWithUserRating(mUserId, mSightId);
                             querySightRating(mSightId);
+
+                            RatingEvent event = new RatingEvent();
+                            event.setRefresh(true);
+                            EventBus.getDefault().post(event);
+
+
                         } else {
                             ToastUtils.showShort("评分提交失败");
                         }

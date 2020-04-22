@@ -20,6 +20,7 @@ import com.max.tour.bean.Comment;
 import com.max.tour.bean.Sights;
 import com.max.tour.common.MyActivity;
 import com.max.tour.constants.Constant;
+import com.max.tour.event.RatingEvent;
 import com.max.tour.helper.DataUtils;
 import com.max.tour.helper.DbHelper;
 import com.max.tour.http.model.HttpData;
@@ -27,6 +28,10 @@ import com.max.tour.ui.adapter.CommentAdapter;
 import com.max.tour.widget.PopupInput;
 import com.willy.ratingbar.BaseRatingBar;
 import com.willy.ratingbar.ScaleRatingBar;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -452,4 +457,25 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
 
 
     }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getRefresh(RatingEvent event) {
+        if (event != null) {
+            querySight(mLatLng);
+        }
+    }
+
+
 }

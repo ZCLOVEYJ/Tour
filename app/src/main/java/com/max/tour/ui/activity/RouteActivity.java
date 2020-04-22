@@ -229,6 +229,7 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
         switch (view.getId()) {
             case R.id.layout_back:
                 RouteEvent event = new RouteEvent();
+                event.setTag(-1);
                 EventBus.getDefault().post(event);
                 finish();
                 break;
@@ -448,7 +449,7 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
         if (errorCode == AMapException.CODE_AMAP_SUCCESS) {
             if (result != null && result.getPaths() != null) {
                 if (result.getPaths().size() > 0) {
-                    mWalkRouteResult =  result;
+                    mWalkRouteResult = result;
                     RouteEvent event = new RouteEvent();
                     event.setTag(2);
                     event.setWalkRouteResult(mWalkRouteResult);
@@ -466,9 +467,9 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
             } else {
                 ToastUtils.showShort(R.string.no_result);
             }
-        } else if(errorCode == AMapException.CODE_AMAP_OVER_DIRECTION_RANGE){
+        } else if (errorCode == AMapException.CODE_AMAP_OVER_DIRECTION_RANGE) {
             ToastUtils.showShort(AMapException.AMAP_OVER_DIRECTION_RANGE);
-        }else {
+        } else {
             ToastUtils.showShort(errorCode);
         }
     }
@@ -512,6 +513,7 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
     @Override
     public void onBackPressed() {
         RouteEvent event = new RouteEvent();
+        event.setTag(-1);
         EventBus.getDefault().post(event);
         super.onBackPressed();
 

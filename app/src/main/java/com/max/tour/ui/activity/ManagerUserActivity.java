@@ -120,7 +120,7 @@ public class ManagerUserActivity extends MyActivity implements BaseQuickAdapter.
        if ("0".equals(tag)){
            updateUserWithPosition(userId,"1");
        }else if ("1".equals(tag)){
-           updateUserWithPosition(userId,"1");
+           updateUserWithPosition(userId,"0");
        }
     }
 

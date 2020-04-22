@@ -59,7 +59,7 @@ public class UserActivity extends MyActivity {
 
     @Override
     protected void initView() {
-
+        mSbPersonDataName.setRightText(Constant.mUserName);
     }
 
     @Override

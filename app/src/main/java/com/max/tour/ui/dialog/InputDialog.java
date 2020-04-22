@@ -61,6 +61,7 @@ public class InputDialog extends BasePopupWindow implements View.OnClickListener
                     return;
                 }
                 listener.confirm(str);
+                dismiss();
                 break;
             default:
         }

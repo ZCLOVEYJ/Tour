@@ -70,6 +70,12 @@ public class UserFragment extends MyFragment<MainActivity> {
 
     @Override
     protected void initView() {
+        if (!Constant.mIsAdmin){
+
+            mTvUserName.setText(Constant.mUserName);
+        }else {
+            mTvUserName.setText("admin");
+        }
 
     }
 
@@ -100,8 +106,12 @@ public class UserFragment extends MyFragment<MainActivity> {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.layout_userInfo:
-                Intent intent = new Intent(getActivity(), UserActivity.class);
-                startActivity(intent);
+                if (!Constant.mIsAdmin){
+                    Intent intent = new Intent(getActivity(), UserActivity.class);
+                    startActivity(intent);
+                    return;
+                }
+
                 break;
             case R.id.layout_user:
                 if (!Constant.mIsAdmin){
