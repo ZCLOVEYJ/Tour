@@ -44,6 +44,7 @@ import com.flyco.tablayout.CommonTabLayout;
 import com.flyco.tablayout.listener.CustomTabEntity;
 import com.flyco.tablayout.listener.OnTabSelectListener;
 import com.max.tour.R;
+import com.max.tour.event.RefreshEvent;
 import com.max.tour.event.RouteEvent;
 import com.max.tour.event.SearchEvent;
 import com.max.tour.helper.DbHelper;
@@ -52,6 +53,7 @@ import com.max.tour.ui.activity.SearchActivity;
 import com.max.tour.ui.activity.SightDetailsActivity;
 import com.max.tour.utils.map.BusRouteOverlay;
 import com.max.tour.utils.map.DrivingRouteOverlay;
+import com.max.tour.utils.map.WalkRouteOverlay;
 import com.max.tour.widget.BusView;
 import com.max.tour.widget.DriveView;
 import com.tbruyelle.rxpermissions2.RxPermissions;
@@ -158,6 +160,8 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     private String mStartStr;
 
     private String mEndStr;
+
+    private int mType = -1;
 
 
     public static HomeFragment newInstance() {
@@ -593,16 +597,17 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     public void onRouteEvent(RouteEvent event) {
         if (event != null) {
             if (0 == event.getTag()) {
+
                 // 展示驾车路线
                 driveRouteResult = event.getDriveRouteResult();
                 mStartPoint = event.getStartPoint();
                 mEndPoint = event.getEndPoint();
                 mStartStr = event.getStartStr();
                 mEndStr = event.getEndStr();
-
-
+                mType = 0;
                 showDriverRoute(0, driveRouteResult.getPaths().size());
             } else if (1 == event.getTag()) {
+                aMap.clear();
                 BusRouteOverlay busrouteOverlay = new BusRouteOverlay(getActivity(), aMap,
                         event.getBusRouteResult().getPaths().get(0), event.getBusRouteResult().getStartPos(),
                         event.getBusRouteResult().getTargetPos());
@@ -630,60 +635,120 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
             } else if (2 == event.getTag()) {
 
+                walkRouteResult = event.getWalkRouteResult();
+                mStartPoint = event.getStartPoint();
+                mEndPoint = event.getEndPoint();
+                mStartStr = event.getStartStr();
+                mEndStr = event.getEndStr();
+                mType = 2;
+                showDriverRoute(0, walkRouteResult.getPaths().size());
+
             }
 
         }
     }
 
     /**
-     * 展示第几条路线
-     *
      * @param routeTag
+     * @param routeSize
      */
     private void showDriverRoute(int routeTag, int routeSize) {
-        if (driveRouteResult != null) {
-            aMap.clear();
-            for (int i = 0; i < driveRouteResult.getPaths().size(); i++) {
-                DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
-                        getActivity(), aMap, driveRouteResult.getPaths().get(i),
-                        driveRouteResult.getStartPos(),
-                        driveRouteResult.getTargetPos(), null);
-                if (i == routeTag) {
-                    //是否用颜色展示交通拥堵情况，默认true
-                    drivingRouteOverlay.setIsColorfulline(true);
-                    //设置节点marker是否显示
-                    drivingRouteOverlay.setNodeIconVisibility(true);
-                } else {
-                    drivingRouteOverlay.setIsColorfulline(false);
-                    drivingRouteOverlay.setNodeIconVisibility(false);
+        if (mType == 0) {
+            if (driveRouteResult != null) {
+                aMap.clear();
+                for (int i = 0; i < driveRouteResult.getPaths().size(); i++) {
+                    DrivingRouteOverlay drivingRouteOverlay = new DrivingRouteOverlay(
+                            getActivity(), aMap, driveRouteResult.getPaths().get(i),
+                            driveRouteResult.getStartPos(),
+                            driveRouteResult.getTargetPos(), null);
+                    if (i == routeTag) {
+                        //是否用颜色展示交通拥堵情况，默认true
+                        drivingRouteOverlay.setIsColorfulline(true);
+                        //设置节点marker是否显示
+                        drivingRouteOverlay.setNodeIconVisibility(true);
+                    } else {
+                        drivingRouteOverlay.setIsColorfulline(false);
+                        drivingRouteOverlay.setNodeIconVisibility(false);
+                    }
+                    drivingRouteOverlay.removeFromMap();
+                    drivingRouteOverlay.addToMap();
+                    drivingRouteOverlay.zoomToSpan();
                 }
-                drivingRouteOverlay.removeFromMap();
-                drivingRouteOverlay.addToMap();
-                drivingRouteOverlay.zoomToSpan();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // 隐藏search
+                        mLayoutSearch.setVisibility(View.GONE);
+                        mLayoutRoute.setVisibility(View.VISIBLE);
+
+                        mTvStartLocation.setText(mStartStr);
+                        mTvEndLocation.setText(mEndStr);
+
+
+                        if (mDriveView != null) {
+                            mDriveView.setVisibility(View.VISIBLE);
+                            mDriveView.setType(0);
+                            mDriveView.setRouteSize(routeSize);
+                            mDriveView.setDrivePaths(driveRouteResult.getPaths());
+                        }
+
+                        if (mBusView != null) {
+                            mBusView.setVisibility(View.GONE);
+                        }
+                    }
+                });
+            } else {
+                ToastUtils.showShort("请重新搜索路线");
             }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-
-                    // 隐藏search
-                    mLayoutSearch.setVisibility(View.GONE);
-                    mLayoutRoute.setVisibility(View.VISIBLE);
-
-
-                    if (mDriveView != null) {
-                        mDriveView.setVisibility(View.VISIBLE);
-                        mDriveView.setRouteSize(routeSize);
-                        mDriveView.setPaths(driveRouteResult.getPaths());
+        } else if (mType == 2) {
+            if (walkRouteResult != null) {
+                aMap.clear();
+                for (int i = 0; i < walkRouteResult.getPaths().size(); i++) {
+                    WalkRouteOverlay walkRouteOverlay = new WalkRouteOverlay(
+                            getActivity(), aMap, walkRouteResult.getPaths().get(i),
+                            walkRouteResult.getStartPos(),
+                            walkRouteResult.getTargetPos());
+                    if (i == routeTag) {
+                        //是否用颜色展示交通拥堵情况，默认true
+                        //设置节点marker是否显示
+                        walkRouteOverlay.setNodeIconVisibility(true);
+                    } else {
+                        walkRouteOverlay.setNodeIconVisibility(false);
                     }
-
-                    if (mBusView != null) {
-                        mBusView.setVisibility(View.GONE);
-                    }
+                    walkRouteOverlay.removeFromMap();
+                    walkRouteOverlay.addToMap();
+                    walkRouteOverlay.zoomToSpan();
                 }
-            });
-        } else {
-            ToastUtils.showShort("请重新搜索路线");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // 隐藏search
+                        mLayoutSearch.setVisibility(View.GONE);
+                        mLayoutRoute.setVisibility(View.VISIBLE);
+
+                        mTvStartLocation.setText(mStartStr);
+                        mTvEndLocation.setText(mEndStr);
+
+
+                        if (mDriveView != null) {
+                            mDriveView.setVisibility(View.VISIBLE);
+                            mDriveView.setType(2);
+                            mDriveView.setRouteSize(routeSize);
+                            mDriveView.setWalkPaths(walkRouteResult.getPaths());
+                        }
+
+                        if (mBusView != null) {
+                            mBusView.setVisibility(View.GONE);
+                        }
+                    }
+                });
+            } else {
+                ToastUtils.showShort("请重新搜索路线");
+            }
         }
+
 
     }
 
@@ -708,7 +773,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
     /**
      * 刷新首页View
      */
-    private void refreshView() {
+    public void refreshView() {
         mLayoutSearch.setVisibility(View.VISIBLE);
         mLayoutRoute.setVisibility(View.GONE);
         mTvStartLocation.setText("");
@@ -719,6 +784,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
         mEndPoint = null;
         mStartStr = "";
         mEndStr = "";
+        mType = -1;
 
         mDriveView.setVisibility(View.GONE);
         mDriveView.clear();
@@ -729,6 +795,12 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
         doSearchQuery(KEYWORDS, mCityCode);
 
+    }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRefreshEvent(RefreshEvent event) {
+        if (event != null && event.isRefresh()) {
+            refreshView();
+        }
     }
 }

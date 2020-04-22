@@ -400,12 +400,9 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
                     mBusList.clear();
                     mBusList.addAll(result.getPaths());
                     mBusAdapter.setNewData(mBusList);
-
                     mRecyclerView.setVisibility(View.GONE);
                     mBusRecyclerView.setVisibility(View.VISIBLE);
-
                     mBusRouteResult = result;
-
 
                 } else if (result != null && result.getPaths() == null) {
                     ToastUtils.showShort(R.string.no_result);
@@ -428,6 +425,10 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
                     RouteEvent event = new RouteEvent();
                     event.setTag(0);
                     event.setDriveRouteResult(mDriveRouteResult);
+                    event.setStartPoint(startPoint);
+                    event.setEndPoint(endPoint);
+                    event.setStartStr(mInputLocationStart.getText().toString());
+                    event.setEndStr(mInputLocationEnd.getText().toString());
                     EventBus.getDefault().post(event);
                     finish();
                 } else {
@@ -447,14 +448,14 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
         if (errorCode == AMapException.CODE_AMAP_SUCCESS) {
             if (result != null && result.getPaths() != null) {
                 if (result.getPaths().size() > 0) {
-
-                    final WalkPath walkPath = result.getPaths().get(0);
-                    if (walkPath == null) {
-                        return;
-                    }
+                    mWalkRouteResult =  result;
                     RouteEvent event = new RouteEvent();
                     event.setTag(2);
-                    event.setWalkRouteResult(result);
+                    event.setWalkRouteResult(mWalkRouteResult);
+                    event.setStartPoint(startPoint);
+                    event.setEndPoint(endPoint);
+                    event.setStartStr(mInputLocationStart.getText().toString());
+                    event.setEndStr(mInputLocationEnd.getText().toString());
                     EventBus.getDefault().post(event);
                     finish();
 
@@ -465,7 +466,9 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
             } else {
                 ToastUtils.showShort(R.string.no_result);
             }
-        } else {
+        } else if(errorCode == AMapException.CODE_AMAP_OVER_DIRECTION_RANGE){
+            ToastUtils.showShort(AMapException.AMAP_OVER_DIRECTION_RANGE);
+        }else {
             ToastUtils.showShort(errorCode);
         }
     }
@@ -484,13 +487,20 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
             startPoint.setLongitude(route.getStartLongitude());
             endPoint.setLatitude(route.getEndLatitude());
             endPoint.setLongitude(route.getEndLongitude());
+            mInputLocationStart.setText(route.getStartLocation());
+            mInputLocationEnd.setText(route.getEndLocation());
 
             // 查询路线
             searchRoute(routeType);
         } else {
+            
             RouteEvent event = new RouteEvent();
             event.setTag(1);
             event.setBusRouteResult(mBusRouteResult);
+            event.setStartPoint(startPoint);
+            event.setEndPoint(endPoint);
+            event.setStartStr(mInputLocationStart.getText().toString());
+            event.setEndStr(mInputLocationEnd.getText().toString());
             EventBus.getDefault().post(event);
             finish();
 

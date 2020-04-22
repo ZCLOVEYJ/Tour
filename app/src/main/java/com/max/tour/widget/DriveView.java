@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.amap.api.services.route.DrivePath;
+import com.amap.api.services.route.WalkPath;
 import com.max.tour.R;
 
 import java.text.DecimalFormat;
@@ -35,7 +36,9 @@ public class DriveView extends ConstraintLayout implements View.OnClickListener 
     private ItemClickListener listener;
 
     List<DrivePath> mDrivePaths = new ArrayList<>();
+    List<WalkPath> mWalkPaths = new ArrayList<>();
     private int mRouteSize = 0;
+    private int type = 0;
 
 
     public void setListener(ItemClickListener listener) {
@@ -79,7 +82,7 @@ public class DriveView extends ConstraintLayout implements View.OnClickListener 
 
     }
 
-    public void setPaths(List<DrivePath> drivePaths) {
+    public void setDrivePaths(List<DrivePath> drivePaths) {
         if (mDrivePaths.size() > 0) {
             return;
         }
@@ -116,11 +119,48 @@ public class DriveView extends ConstraintLayout implements View.OnClickListener 
             mTvDistanceOne.setText(str + "公里");
         }
 
-
-//        String time = AMapUtil.times(drivePath.getDuration() + System.currentTimeMillis() / 1000);
-//        long minute = (drivePath.getDuration()) / 60;
-//        String spendDuration = String.format("%d", minute);
     }
+
+    public void setWalkPaths(List<WalkPath> walkPaths) {
+        if (mWalkPaths.size() > 0) {
+            return;
+        }
+        mWalkPaths.addAll(walkPaths);
+        if (mRouteSize > 2) {
+            long minute = (walkPaths.get(2).getDuration()) / 60;
+            String spendDuration = String.format("%d", minute);
+            mTvTimeThree.setText(spendDuration + "分钟");
+
+            float dis = walkPaths.get(2).getDistance() / 1000;
+            DecimalFormat format = new DecimalFormat("0.0");
+            String str = format.format(dis);
+            mTvDistanceThree.setText(str + "公里");
+
+        }
+        if (mRouteSize > 1) {
+            long minute = (walkPaths.get(1).getDuration()) / 60;
+            String spendDuration = String.format("%d", minute);
+            mTvTimeTwo.setText(spendDuration + "分钟");
+
+            float dis = walkPaths.get(1).getDistance() / 1000;
+            DecimalFormat format = new DecimalFormat("0.0");
+            String str = format.format(dis);
+            mTvDistanceTwo.setText(str + "公里");
+        }
+        if (mRouteSize > 0) {
+            long minute = (walkPaths.get(0).getDuration()) / 60;
+            String spendDuration = String.format("%d", minute);
+            mTvTimeOne.setText(spendDuration + "分钟");
+
+            float dis = walkPaths.get(0).getDistance() / 1000;
+            DecimalFormat format = new DecimalFormat("0.0");
+            String str = format.format(dis);
+            mTvDistanceOne.setText(str + "公里");
+        }
+
+    }
+
+
 
     @Override
     public void onClick(View v) {
@@ -198,6 +238,10 @@ public class DriveView extends ConstraintLayout implements View.OnClickListener 
         mRouteSize = 0;
         mDrivePaths.clear();
 
+    }
+
+    public void setType(int i) {
+        this.type = i;
     }
 
     public interface ItemClickListener {

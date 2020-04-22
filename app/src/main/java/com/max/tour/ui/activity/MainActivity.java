@@ -15,6 +15,7 @@ import com.flyco.tablayout.listener.CustomTabEntity;
 import com.flyco.tablayout.listener.OnTabSelectListener;
 import com.max.tour.R;
 import com.max.tour.common.MyActivity;
+import com.max.tour.event.RefreshEvent;
 import com.max.tour.event.RouteEvent;
 import com.max.tour.event.TabEntity;
 import com.max.tour.helper.ActivityStackManager;
@@ -94,12 +95,16 @@ public class MainActivity extends MyActivity implements KeyboardWatcher.SoftKeyb
             @Override
             public void onTabSelect(int position) {
 
+                RefreshEvent event = new RefreshEvent();
+                event.setRefresh(true);
+                EventBus.getDefault().post(event);
                 if (2 == position) {
                     Intent intent = new Intent(MainActivity.this, RouteActivity.class);
                     startActivity(intent);
                 } else {
                     mViewPager.setCurrentItem(position);
                 }
+
             }
 
             @Override
