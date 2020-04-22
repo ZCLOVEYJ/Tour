@@ -162,6 +162,44 @@ public class DbHelper {
 
     }
 
+    /**
+     * 修改用户名
+     *
+     * @param name
+     */
+    public static boolean updateUser(long userId, String name) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
+        qb.where(UserDao.Properties.Id.eq(userId));
+        List<User> users = qb.list();
+        if (users.size() > 0) {
+            User user = users.get(0);
+            user.setUserName(name);
+            daoSession.update(user);
+            return true;
+        }
+        return false;
+
+    }
+
+    /**
+     * 修改权限
+     */
+    public static boolean updateUserWithPosition(long userId, String level) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
+        qb.where(UserDao.Properties.Id.eq(userId));
+        List<User> users = qb.list();
+        if (users.size() > 0) {
+            User user = users.get(0);
+            user.setAdminLevel(level);
+            daoSession.update(user);
+            return true;
+        }
+        return false;
+
+    }
+
     public static void saveTourByLocation(PoiItem item) {
 
         boolean hasData = false;
@@ -252,6 +290,8 @@ public class DbHelper {
      * @return ture = 提交成功
      */
     public static boolean saveComment(String msg, long mUserId, long mSightId) {
+
+
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         Comment comment = new Comment();
         comment.setUserId(mUserId);
@@ -390,4 +430,27 @@ public class DbHelper {
         return qb.list();
     }
 
+    public static List<User> queryUsers() {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
+        return qb.list();
+    }
+
+    public static List<Comment> queryComment() {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
+        return qb.list();
+    }
+
+    public static boolean deleteCommentWithId(long commentId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
+        qb.where(CommentDao.Properties.Id.eq(commentId));
+        List<Comment> list = qb.list();
+        if (list != null && list.size() > 0) {
+            daoSession.delete(list.get(0));
+            return true;
+        }
+        return false;
+    }
 }

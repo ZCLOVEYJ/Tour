@@ -493,7 +493,7 @@ public class RouteActivity extends MyActivity implements RouteSearch.OnRouteSear
             // 查询路线
             searchRoute(routeType);
         } else {
-            
+
             RouteEvent event = new RouteEvent();
             event.setTag(1);
             event.setBusRouteResult(mBusRouteResult);

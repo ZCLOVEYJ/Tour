@@ -3,6 +3,7 @@ package com.max.tour.ui.fragment;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -37,6 +38,8 @@ import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.WalkRouteResult;
+import com.blankj.utilcode.util.AppUtils;
+import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
@@ -62,6 +65,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +88,7 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
 
     public static final String KEYWORDS = "风景名胜";
 
+    public static final String PN_GAODE_MAP = "com.autonavi.minimap";// 高德地图包名
 
     private View mView;
     MapView mMapView = null;
@@ -260,12 +265,49 @@ public class HomeFragment extends Fragment implements PoiSearch.OnPoiSearchListe
             public void onItem(int tag) {
                 if (3 == tag) {
                     // 跳转到高德地图 开始导航
+                    gotoNavi();
                 } else {
                     showDriverRoute(tag, driveRouteResult != null ? driveRouteResult.getPaths().size() : 1);
                 }
             }
         });
         mBusView = mView.findViewById(R.id.bus_view);
+
+    }
+
+    /**
+     * 检测该包名所对应的应用是否存在
+     * @param packageName
+     * @return
+     */
+    public static boolean checkPackage(String packageName) {
+        return new File("/data/data/" + packageName).exists();
+    }
+
+    private void gotoNavi() {
+
+        if (!checkPackage(PN_GAODE_MAP)){
+            ToastUtils.showShort("请先安装高德地图");
+            return;
+        }
+
+        String uriString = null;
+        StringBuilder builder = new StringBuilder("amapuri://route/plan?sourceApplication=maxuslife");
+        if (mStartPoint != null) {
+            builder.append("&sname=").append("")
+                    .append("&slat=").append(mStartPoint.getLatitude())
+                    .append("&slon=").append(mStartPoint.getLongitude());
+        }
+        builder.append("&dlat=").append(mEndPoint.getLatitude())
+                .append("&dlon=").append(mEndPoint.getLongitude())
+                .append("&dname=").append("")
+                .append("&dev=0")
+                .append("&t=0");
+        uriString = builder.toString();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage(PN_GAODE_MAP);
+        intent.setData(Uri.parse(uriString));
+        this.startActivity(intent);
 
     }
 

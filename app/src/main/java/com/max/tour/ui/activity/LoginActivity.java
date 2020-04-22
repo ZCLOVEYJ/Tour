@@ -177,6 +177,7 @@ public class LoginActivity extends MyActivity {
         Constant.mUserIcon = bean.getUserIcon();
         Constant.mInfo = bean.getInfo();
         Constant.mIsAdmin = false;
+        Constant.mLevel = bean.getAdminLevel();
 
         // 保存用户信息
         SpUtils.savaUserInfo();

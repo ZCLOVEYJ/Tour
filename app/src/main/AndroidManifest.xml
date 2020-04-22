@@ -152,6 +152,27 @@
             android:screenOrientation="portrait">
 
         </activity>
+        <activity
+            android:name=".ui.activity.UserActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+
+        </activity>
+        <activity
+            android:name=".ui.activity.ManagerUserActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+
+        </activity>
+        <activity
+            android:name=".ui.activity.ManagerCommentActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+
+        </activity>
 
         <service android:name="com.amap.api.location.APSService"></service>
     </application>

@@ -51,6 +51,12 @@ public class Constant {
      */
     public static String mInfo;
     /**
+     * 用户权限等级
+     */
+    public static String mLevel;
+
+
+    /**
      * 是否是管理员
      */
     public static boolean mIsAdmin;

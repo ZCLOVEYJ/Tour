@@ -26,7 +26,7 @@
             android:layout_gravity="end|center_vertical"
             android:layout_margin="20dp"
             android:scaleType="centerCrop"
-            tools:src="@mipmap/ic_head_placeholder" />
+            android:src="@mipmap/ic_head_placeholder" />
 
     </com.hjq.widget.layout.SettingBar>
 
@@ -45,23 +45,7 @@
         android:layout_height="wrap_content"
         app:bar_leftText="@string/personal_data_name"
         app:bar_rightHint="@string/personal_data_name_hint"
-        app:bar_rightText="Android 轮子哥" />
+        app:bar_rightText="user" />
 
-    <com.hjq.widget.layout.SettingBar
-        android:id="@+id/sb_person_data_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:bar_leftText="@string/personal_data_address"
-        app:bar_rightHint="@string/personal_data_address_hint"
-        app:bar_rightIcon="@mipmap/ico_go_black" />
-
-    <com.hjq.widget.layout.SettingBar
-        android:id="@+id/sb_person_data_phone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        app:bar_leftText="@string/personal_data_phone"
-        app:bar_rightHint="@string/personal_data_phone_hint"
-        app:bar_rightIcon="@mipmap/ico_go_black" />
 
 </LinearLayout>

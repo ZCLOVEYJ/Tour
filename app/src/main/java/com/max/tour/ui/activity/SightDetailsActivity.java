@@ -323,6 +323,10 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
             mPopupInput = new PopupInput(this).setListener(new PopupInput.SendListener() {
                 @Override
                 public void onSend(String msg) {
+                    if ("1".equals(Constant.mLevel)){
+                        ToastUtils.showShort("你没有评论权限,请联系管理员");
+                        return ;
+                    }
                     commitMsg(msg, mCommentId);
                 }
             });

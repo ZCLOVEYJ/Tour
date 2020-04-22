@@ -29,6 +29,7 @@ public class SpUtils {
         SPUtils.getInstance(Constant.USER).put("isAdmin", Constant.mIsAdmin);
         SPUtils.getInstance(Constant.USER).put("adminName", Constant.mAdminName);
         SPUtils.getInstance(Constant.USER).put("adminId", Constant.mAdminId);
+        SPUtils.getInstance(Constant.USER).put("level", Constant.mLevel);
         SPUtils.getInstance(Constant.USER).put("isLogin", true);
 
 
@@ -47,6 +48,7 @@ public class SpUtils {
         SPUtils.getInstance(Constant.USER).put("adminName", "");
         SPUtils.getInstance(Constant.USER).put("adminId", "");
         SPUtils.getInstance(Constant.USER).put("isLogin", false);
+        SPUtils.getInstance(Constant.USER).put("level", "");
     }
 
     public static void initUserInfo() {
@@ -62,5 +64,6 @@ public class SpUtils {
         Constant.mIsAdmin = SPUtils.getInstance(Constant.USER).getBoolean("isAdmin", false);
         Constant.mAdminName = SPUtils.getInstance(Constant.USER).getString("adminName", "");
         Constant.mAdminId = SPUtils.getInstance(Constant.USER).getLong("adminId");
+        Constant.mLevel = SPUtils.getInstance(Constant.USER).getString("level","");
     }
 }
