@@ -43,6 +43,8 @@ public class Sights implements Serializable {
     private String resortTime;
     private String resortContent;
 
+    private Double resortScore;
+
     /**
      * 经度
      */
@@ -71,11 +73,10 @@ public class Sights implements Serializable {
     @Generated(hash = 1833270973)
     private transient SightsDao myDao;
 
-    @Generated(hash = 1122633717)
-    public Sights(Long id, Long userId, String resortId, String resortName,
-            String resortAddress, String resortGrade, Integer resortPrice,
-            String resortTime, String resortContent, Double longitude,
-            Double latitude) {
+    @Generated(hash = 1137092250)
+    public Sights(Long id, Long userId, String resortId, String resortName, String resortAddress,
+            String resortGrade, Integer resortPrice, String resortTime, String resortContent,
+            Double resortScore, Double longitude, Double latitude) {
         this.id = id;
         this.userId = userId;
         this.resortId = resortId;
@@ -85,6 +86,7 @@ public class Sights implements Serializable {
         this.resortPrice = resortPrice;
         this.resortTime = resortTime;
         this.resortContent = resortContent;
+        this.resortScore = resortScore;
         this.longitude = longitude;
         this.latitude = latitude;
     }
@@ -306,6 +308,14 @@ public class Sights implements Serializable {
     public void __setDaoSession(DaoSession daoSession) {
         this.daoSession = daoSession;
         myDao = daoSession != null ? daoSession.getSightsDao() : null;
+    }
+
+    public Double getResortScore() {
+        return this.resortScore;
+    }
+
+    public void setResortScore(Double resortScore) {
+        this.resortScore = resortScore;
     }
 
 

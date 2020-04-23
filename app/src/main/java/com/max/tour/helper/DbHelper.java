@@ -245,6 +245,7 @@ public class DbHelper {
 
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.orderDesc(SightsDao.Properties.ResortScore);
 
         return qb.list();
     }
@@ -273,6 +274,18 @@ public class DbHelper {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
         qb.where(SightsDao.Properties.Latitude.eq(latLng.latitude), SightsDao.Properties.Longitude.eq(latLng.longitude));
+        List<Sights> sights = qb.list();
+        if (sights.size() > 0) {
+            return sights.get(0);
+        }
+        return null;
+    }
+
+    public static Sights findSightByLatLon(long sightId) {
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.where(SightsDao.Properties.Id.eq(sightId));
         List<Sights> sights = qb.list();
         if (sights.size() > 0) {
             return sights.get(0);
@@ -386,7 +399,15 @@ public class DbHelper {
         rate.setSightId(sightId);
         rate.setScore(ratings);
         rate.setRatingtime(new Date());
-        return daoSession.insert(rate) > 0;
+        if (daoSession.insert(rate) > 0) {
+            double score = getAverageRating(sightId);
+            Sights sights = findSightByLatLon(sightId);
+            sights.setResortScore(score);
+            daoSession.update(sights);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public static boolean insertRoute(String toString, String toString1, double latitude, double longitude, double latitude1, double longitude1) {
