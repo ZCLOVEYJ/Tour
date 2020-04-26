@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.amap.api.maps2d.model.LatLng;
+import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -113,7 +114,6 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
         querySight(mLatLng);
 
 
-
     }
 
     private void querySight(LatLng mLatLng) {
@@ -143,10 +143,52 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
                             initHeader();
                             initFooter();
                             initAdapter();
+                            initCount();
+
 
                         } else {
                             ToastUtils.showShort("查找景区失败");
                         }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ToastUtils.showShort(e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+    }
+
+    private void initCount() {
+        LogUtils.i("TAG", "count = " + mBean.getCount());
+        Observable
+                .create(new ObservableOnSubscribe<HttpData<Float>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<HttpData<Float>> emitter) throws Exception {
+
+                        boolean result = DbHelper.updateSight(mSightId);
+                        LogUtils.iTag("TAG", "更新成功");
+
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<HttpData<Float>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(HttpData<Float> data) {
+
                     }
 
                     @Override
@@ -328,9 +370,9 @@ public class SightDetailsActivity extends MyActivity implements BaseQuickAdapter
             mPopupInput = new PopupInput(this).setListener(new PopupInput.SendListener() {
                 @Override
                 public void onSend(String msg) {
-                    if ("1".equals(Constant.mLevel)){
+                    if ("1".equals(Constant.mLevel)) {
                         ToastUtils.showShort("你没有评论权限,请联系管理员");
-                        return ;
+                        return;
                     }
                     commitMsg(msg, mCommentId);
                 }

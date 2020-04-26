@@ -20,10 +20,12 @@ import com.max.tour.bean.greendao.RouteDao;
 import com.max.tour.bean.greendao.SightsDao;
 import com.max.tour.bean.greendao.UserDao;
 import com.max.tour.constants.Constant;
+import com.max.tour.ui.activity.SightDetailsActivity;
 import com.max.tour.utils.StringUtils;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -221,6 +223,7 @@ public class DbHelper {
             sight.setResortGrade("3");
             sight.setResortTime("早8:00--晚6:00");
             sight.setResortPrice(120);
+            sight.setCount(0);
             sight.setResortAddress(item.getSnippet());
             daoSession.insert(sight);
 
@@ -236,19 +239,6 @@ public class DbHelper {
 
     }
 
-    /**
-     * 查询推荐的景点
-     *
-     * @return 景点列表
-     */
-    public static List<Sights> findRecommend() {
-
-        DaoSession daoSession = MyApp.getApplication().getDaoSession();
-        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
-        qb.orderDesc(SightsDao.Properties.ResortScore);
-
-        return qb.list();
-    }
 
     /**
      * 查询单个景点
@@ -327,7 +317,14 @@ public class DbHelper {
         // 提交成功  查询评论列表
         QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
         qb.where(CommentDao.Properties.SightId.eq(mSightId));
-        return qb.list();
+
+        List<Comment> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static List<Rate> getSightRating(long mSightId) {
@@ -335,7 +332,14 @@ public class DbHelper {
         // 提交成功  查询评论列表
         QueryBuilder<Rate> qb = daoSession.queryBuilder(Rate.class);
         qb.where(RateDao.Properties.SightId.eq(mSightId));
-        return qb.list();
+
+        List<Rate> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static float getAverageRating(long mSightId) {
@@ -388,7 +392,13 @@ public class DbHelper {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Rate> qb = daoSession.queryBuilder(Rate.class);
         qb.where(RateDao.Properties.SightId.eq(sightId));
-        return qb.list();
+        List<Rate> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static boolean commitRating(long sightId, long userId, float ratings) {
@@ -448,19 +458,37 @@ public class DbHelper {
     public static List<Route> queryRoute() {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Route> qb = daoSession.queryBuilder(Route.class);
-        return qb.list();
+        List<Route> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static List<User> queryUsers() {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
-        return qb.list();
+        List<User> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static List<Comment> queryComment() {
         DaoSession daoSession = MyApp.getApplication().getDaoSession();
         QueryBuilder<Comment> qb = daoSession.queryBuilder(Comment.class);
-        return qb.list();
+        List<Comment> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
     }
 
     public static boolean deleteCommentWithId(long commentId) {
@@ -473,5 +501,97 @@ public class DbHelper {
             return true;
         }
         return false;
+    }
+
+    public static boolean updateUserSex(long userId, String sex) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
+        qb.where(UserDao.Properties.Id.eq(userId));
+        List<User> users = qb.list();
+        if (users.size() > 0) {
+            User user = users.get(0);
+            user.setSex(sex);
+            daoSession.update(user);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean updateUserBirthday(long userId, String birthday) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<User> qb = daoSession.queryBuilder(User.class);
+        qb.where(UserDao.Properties.Id.eq(userId));
+        List<User> users = qb.list();
+        if (users.size() > 0) {
+            User user = users.get(0);
+            user.setBirthday(birthday);
+            daoSession.update(user);
+            return true;
+        }
+        return false;
+    }
+
+    public static List<Sights> findRecommendWithRating() {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.orderDesc(SightsDao.Properties.ResortScore);
+
+        List<Sights> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
+
+    }
+
+    public static List<Sights> findRecommendWithHot() {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.orderDesc(SightsDao.Properties.Count);
+        List<Sights> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
+
+
+    }
+
+    /**
+     * 查询推荐的景点
+     *
+     * @return 景点列表
+     */
+    public static List<Sights> findRecommend() {
+
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+
+        List<Sights> list = qb.list();
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+
+
+        return list;
+    }
+
+    public static boolean updateSight(long mSightId) {
+        DaoSession daoSession = MyApp.getApplication().getDaoSession();
+        QueryBuilder<Sights> qb = daoSession.queryBuilder(Sights.class);
+        qb.where(SightsDao.Properties.Id.eq(mSightId));
+        List<Sights> sights = qb.list();
+        if (sights.size() > 0) {
+            Sights sight = sights.get(0);
+            sight.setCount(sight.getCount() + 1);
+            daoSession.update(sight);
+            return true;
+        }
+        return false;
+
     }
 }

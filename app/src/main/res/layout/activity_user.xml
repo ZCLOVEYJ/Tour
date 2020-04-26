@@ -47,5 +47,27 @@
         app:bar_rightHint="@string/personal_data_name_hint"
         app:bar_rightText="user" />
 
+    <com.hjq.widget.layout.SettingBar
+        android:id="@+id/sb_person_data_sex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:bar_leftText="性别"
+        app:bar_rightHint="女"
+        app:bar_rightText="女" />
+
+    <com.hjq.widget.layout.SettingBar
+        android:id="@+id/sb_person_data_birthday"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:bar_leftText="生日"
+        app:bar_rightText="" />
+
+    <com.hjq.widget.layout.SettingBar
+        android:id="@+id/sb_person_data_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:bar_leftText="修改密码" />
+
 
 </LinearLayout>

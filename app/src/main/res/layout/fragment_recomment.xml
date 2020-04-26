@@ -11,24 +11,29 @@
         app:backButton="false"
         app:title="@string/home_nav_found" />
 
-    <com.scwang.smartrefresh.layout.SmartRefreshLayout
-        android:id="@+id/refreshLayout"
+    <com.flyco.tablayout.CommonTabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="48dp"
+        android:background="@color/white"
+        app:tl_iconVisible="false"
+        app:tl_indicator_color="@color/gray"
+        app:tl_indicator_corner_radius="1.5dp"
+        app:tl_indicator_height="@dimen/dp_4"
+        app:tl_indicator_style="TRIANGLE"
+        app:tl_textBold="SELECT"
+        app:tl_divider_color="@color/black50"
+        app:tl_textSelectColor="#000000"
+        app:tl_textUnselectColor="#333333"
+        app:tl_textsize="16sp" />
 
-        <com.scwang.smartrefresh.layout.header.ClassicsHeader
-
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+    <com.hjq.widget.layout.NoScrollViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
 
-    </com.scwang.smartrefresh.layout.SmartRefreshLayout>
+
 
 
 </LinearLayout>

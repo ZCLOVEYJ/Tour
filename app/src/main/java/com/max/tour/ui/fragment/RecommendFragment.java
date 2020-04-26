@@ -1,37 +1,28 @@
 package com.max.tour.ui.fragment;
 
-import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
-import com.amap.api.maps2d.model.LatLng;
-import com.blankj.utilcode.util.ToastUtils;
-import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.flyco.tablayout.CommonTabLayout;
+import com.flyco.tablayout.listener.CustomTabEntity;
+import com.flyco.tablayout.listener.OnTabSelectListener;
+import com.hjq.widget.layout.NoScrollViewPager;
 import com.max.tour.R;
-import com.max.tour.bean.Sights;
 import com.max.tour.common.MyFragment;
-import com.max.tour.helper.DbHelper;
-import com.max.tour.http.model.HttpData;
+import com.max.tour.event.TabEntity;
 import com.max.tour.ui.activity.MainActivity;
-import com.max.tour.ui.activity.SightDetailsActivity;
-import com.max.tour.ui.adapter.RecommendAdapter;
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
-import com.scwang.smartrefresh.layout.api.RefreshLayout;
-import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 /**
  * Copyright (C) 2019, Relx
@@ -44,19 +35,17 @@ import io.reactivex.schedulers.Schedulers;
  * <p>
  * Ver 2.2, 2020-04-14, ZhengChen, Create file
  */
-public class RecommendFragment extends MyFragment<MainActivity> implements BaseQuickAdapter.OnItemClickListener {
+public class RecommendFragment extends MyFragment<MainActivity> {
 
-    @BindView(R.id.recyclerView)
-    RecyclerView mRecyclerView;
-    @BindView(R.id.refreshLayout)
-    SmartRefreshLayout mRefreshLayout;
 
-    List<Sights> mList;
-    GridLayoutManager mLayoutManager;
+    @BindView(R.id.tabLayout)
+    CommonTabLayout mTabLayout;
+    @BindView(R.id.viewPager)
+    NoScrollViewPager mViewPager;
 
-    RecommendAdapter mAdapter;
-
-    View mEmptyView;
+    private ArrayList<Fragment> mFragments = new ArrayList<>();
+    private ArrayList<CustomTabEntity> mTabEntity = new ArrayList<>();
+    private String[] mTitles = {"全部", "评分", "热门"};
 
     public static RecommendFragment newInstance() {
         return new RecommendFragment();
@@ -69,103 +58,57 @@ public class RecommendFragment extends MyFragment<MainActivity> implements BaseQ
 
     @Override
     protected void initView() {
+        for (int i = 0; i < mTitles.length; i++) {
 
-        mList = new ArrayList<>();
-        mAdapter = new RecommendAdapter(getActivity(), mList);
+            SightListFragment fragment = new SightListFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt("tag", i);
+            fragment.setArguments(bundle);
+            mFragments.add(fragment);
+            mTabEntity.add(new TabEntity(mTitles[i], 0, 0));
+        }
 
-        mEmptyView = View.inflate(getActivity(), R.layout.layout_empty, null);
-
-        mLayoutManager = new GridLayoutManager(getActivity(), 2);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.setAdapter(mAdapter);
-
-        mAdapter.setEmptyView(mEmptyView);
-        mAdapter.setOnItemClickListener(this);
-
-        mRefreshLayout.setEnableLoadMore(false);
-        mRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
+        mViewPager.setAdapter(new FragmentPagerAdapter(getFragmentManager()) {
             @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                //数据
-                mList.clear();
-                getListData();
+            public Fragment getItem(int i) {
+                return mFragments.get(i);
+            }
 
+            @Override
+            public int getCount() {
+                return mTitles.length;
+            }
+        });
+
+        mTabLayout.setTabData(mTabEntity);
+        mTabLayout.setOnTabSelectListener(new OnTabSelectListener() {
+            @Override
+            public void onTabSelect(int position) {
+                mViewPager.setCurrentItem(position);
+            }
+
+            @Override
+            public void onTabReselect(int position) {
 
             }
         });
-        getListData();
+        mTabLayout.setCurrentTab(0);
 
 
-    }
-
-    private void getListData() {
-        Observable
-                .create(new ObservableOnSubscribe<HttpData<List<Sights>>>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<HttpData<List<Sights>>> emitter) throws Exception {
-
-                        List<Sights> list = DbHelper.findRecommend();
-                        emitter.onNext(getData(200, "", list));
-
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<HttpData<List<Sights>>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(HttpData<List<Sights>> data) {
-                        if (200 == data.getCode() && data.getData() != null) {
-                            mList.addAll(data.getData());
-                            // 展示 数据
-                        }
-                        mRefreshLayout.finishRefresh();
-                        mAdapter.setNewData(mList);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        ToastUtils.showShort("网络错误");
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
 
     }
+
+
 
     @Override
     protected void initData() {
 
     }
 
-    private HttpData<List<Sights>> getData(int code, String msg, List<Sights> bean) {
-        HttpData<List<Sights>> data = new HttpData<>();
-        data.setCode(code);
-        data.setMsg(msg);
-        data.setData(bean);
-        return data;
-    }
 
     @Override
     public boolean isStatusBarEnabled() {
         // 使用沉浸式状态栏
         return !super.isStatusBarEnabled();
-    }
-
-
-    @Override
-    public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-        Intent intent = new Intent(getActivity(), SightDetailsActivity.class);
-        LatLng latLng = new LatLng(mList.get(position).getLatitude(), mList.get(position).getLongitude());
-        intent.putExtra("lat_lon", latLng);
-        getActivity().startActivity(intent);
     }
 }

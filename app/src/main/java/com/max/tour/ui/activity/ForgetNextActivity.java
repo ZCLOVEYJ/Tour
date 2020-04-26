@@ -105,8 +105,10 @@ public class ForgetNextActivity extends MyActivity {
                             ToastUtils.showShort("重置密码失败");
                         } else {
                             ToastUtils.showShort("重置密码成功，请重新登录");
+
                         }
                         startActivity(new Intent(ForgetNextActivity.this, LoginActivity.class));
+
 
                     }
 

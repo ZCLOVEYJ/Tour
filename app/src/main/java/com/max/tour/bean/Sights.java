@@ -54,6 +54,9 @@ public class Sights implements Serializable {
      */
     private Double latitude;
 
+    private Integer count;
+
+
 
     @ToMany(referencedJoinProperty = "sightId")
     private List<Picture> pictures;
@@ -73,10 +76,10 @@ public class Sights implements Serializable {
     @Generated(hash = 1833270973)
     private transient SightsDao myDao;
 
-    @Generated(hash = 1137092250)
+    @Generated(hash = 408604138)
     public Sights(Long id, Long userId, String resortId, String resortName, String resortAddress,
             String resortGrade, Integer resortPrice, String resortTime, String resortContent,
-            Double resortScore, Double longitude, Double latitude) {
+            Double resortScore, Double longitude, Double latitude, Integer count) {
         this.id = id;
         this.userId = userId;
         this.resortId = resortId;
@@ -89,6 +92,7 @@ public class Sights implements Serializable {
         this.resortScore = resortScore;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.count = count;
     }
 
     @Generated(hash = 252880681)
@@ -316,6 +320,14 @@ public class Sights implements Serializable {
 
     public void setResortScore(Double resortScore) {
         this.resortScore = resortScore;
+    }
+
+    public Integer getCount() {
+        return this.count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
     }
 
 
